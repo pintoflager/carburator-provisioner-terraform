@@ -1,9 +1,4 @@
-name = "hetzner"
-default = false
 bin = "terraform"
-retry_times = 3
-retry_interval = 10
-boot_wait = 20
 
 [target]
 status = "production"
