@@ -1,7 +1,6 @@
-bin = "terraform"
+target = "production"
 
-[target]
-status = "production"
+bin = "terraform"
 
 [requirements]
 local = ["terraform"]
