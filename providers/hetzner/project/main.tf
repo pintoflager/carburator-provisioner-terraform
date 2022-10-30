@@ -3,15 +3,11 @@ terraform {
 }
 
 provider "hcloud" {
-  token = var.api_token
+  token = var.apitoken
 }
 
-###
-# Security.
-#
-
-# Upload copy of server user SSH key
+# Upload project root user's public SSH key
 resource "hcloud_ssh_key" "project_ssh" {
-  name       = var.sshkey["name"]
-  public_key = file("${var.sshkey["path"]}.pub")
+  name       = var.keyname
+  public_key = file("${var.pubkey}")
 }

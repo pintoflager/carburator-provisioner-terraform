@@ -1,7 +1,7 @@
-output "ssh_key" {
-  description = "Uploaded project user public SSH key."
-  value       = {
-    name   = hcloud_ssh_key.project_ssh.name
-    id     = hcloud_ssh_key.project_ssh.id
+output "project" {
+  description = "Project registration output"
+  value    = {
+    sshkey_name   = hcloud_ssh_key.project_ssh.name
+    sshkey_id     = hcloud_ssh_key.project_ssh.id
   }
 }
