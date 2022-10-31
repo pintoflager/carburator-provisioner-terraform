@@ -19,7 +19,7 @@ mkdir -p "$PROVISIONER_HOME/.terraform"
 token=$(carburator get secret "$PROVIDER_SECRET_0") || exit 1
 if [[ -z $token ]]; then
 	carburator fn paint red \
-		"Hetzner API token from secret came back empty. Unable to proceed"
+		"Hetzner API token from secret came back empty. Unable to proceed" && exit 1
 fi
 
 export TF_DATA_DIR="$PROVISIONER_HOME/.terraform"
