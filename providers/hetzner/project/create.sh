@@ -6,6 +6,8 @@
 # ATTENTION: to check the environment variables uncomment:
 # env
 
+carburator fn paint green "Invoking Terraform provisioner..."
+
 ###
 # Registers project with hetzner and adds ssh key for project root.
 #
@@ -14,12 +16,14 @@
 mkdir -p "$PROVISIONER_HOME/.terraform"
 
 ###
-# Get API token from secrets or fail early.
+# Get API token from secrets or bail early.
 #
-token=$(carburator get secret "$PROVIDER_SECRET_0") || exit 1
-if [[ -z $token ]]; then
+token=$(carburator get secret "$PROVIDER_SECRET_0"); exitcode=$?
+
+if [[ -z $token || $exitcode -gt 0 ]]; then
 	carburator fn paint red \
-		"Hetzner API token from secret came back empty. Unable to proceed" && exit 1
+		"Could not load Hetzner API token from secret. Unable to proceed"
+	exit 1
 fi
 
 export TF_DATA_DIR="$PROVISIONER_HOME/.terraform"
