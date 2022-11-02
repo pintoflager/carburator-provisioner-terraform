@@ -22,7 +22,7 @@ mkdir -p "$PROVISIONER_HOME/.terraform"
 ###
 # Get API token from secrets or bail early.
 #
-token=$(carburator get secret "$PROVIDER_SECRET_0"); exitcode=$?
+token=$(carburator get secret "$PROVIDER_SECRET_0" --user root); exitcode=$?
 
 if [[ -z $token || $exitcode -gt 0 ]]; then
 	carburator fn paint red \
@@ -38,8 +38,12 @@ export TF_VAR_keyname="root"
 export TF_VAR_pubkey="$SSHKEY_ROOT_PUBLIC"
 export TF_VAR_identifier="$PROJECT_IDENTIFIER"
 
-terraform -chdir="$PROVISIONER_PROVIDER_PATH/.tf-project" init
-terraform -chdir="$PROVISIONER_PROVIDER_PATH/.tf-project" apply -auto-approve
-terraform -chdir="$PROVISIONER_PROVIDER_PATH/.tf-project" output -json > \
-	"$PROVISIONER_PATH/project.json"
+provisioner_call() {
+	terraform -chdir="$PROVISIONER_PROVIDER_PATH/.tf-project" init
+	terraform -chdir="$PROVISIONER_PROVIDER_PATH/.tf-project" apply -auto-approve
+	terraform -chdir="$PROVISIONER_PROVIDER_PATH/.tf-project" output -json > \
+		"$PROVISIONER_PATH/project.json"
+}
 
+# TODO: analyze output json, if it looks like it failed delete json and retry?
+provisioner_call
