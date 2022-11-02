@@ -6,6 +6,10 @@
 # ATTENTION: to check the environment variables uncomment:
 # env
 
+# ATTENTION: Default exit codes for informing carburator's script runner:
+# exitcode_can_retry = 110
+# exitcode_unrecoverable = 120
+
 carburator fn paint green "Invoking Terraform provisioner..."
 
 ###
@@ -23,7 +27,7 @@ token=$(carburator get secret "$PROVIDER_SECRET_0"); exitcode=$?
 if [[ -z $token || $exitcode -gt 0 ]]; then
 	carburator fn paint red \
 		"Could not load Hetzner API token from secret. Unable to proceed"
-	exit 1
+	exit 120
 fi
 
 export TF_DATA_DIR="$PROVISIONER_HOME/.terraform"
