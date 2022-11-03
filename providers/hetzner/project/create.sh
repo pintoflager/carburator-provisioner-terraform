@@ -24,7 +24,7 @@ mkdir -p "$PROVISIONER_HOME/.terraform" "$PROVISIONER_PROVIDER_PATH/.tf-project"
 while read -r tf_file; do
 	file=$(basename "$tf_file")
 	cp -n "$tf_file" "$PROVISIONER_PROVIDER_PATH/.tf-project/$file"
-done < <(find prodo-hdiw/provisioners/terraform/providers/hetzner/project -maxdepth 1 -iname '*.tf')
+done < <(find "$PROVISIONER_PROVIDER_PATH/project" -maxdepth 1 -iname '*.tf')
 
 ###
 # Get API token from secrets or bail early.
