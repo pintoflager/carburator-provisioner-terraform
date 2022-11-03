@@ -1,16 +1,3 @@
-variable providers {
-  hcloud = {
-    source  = "hetznercloud/hcloud"
-    version = "1.34.3"
-  }
-  template = {
-    version = "~> 2.2.0"
-  }
-  local = {
-    version = "~> 2.0.0"
-  }
-}
-
 # Has to be added as TF_VAR before running init / apply
 variable "apitoken" {
   type = string
