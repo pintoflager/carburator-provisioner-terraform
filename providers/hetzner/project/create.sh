@@ -16,8 +16,8 @@ carburator fn paint green "Invoking Terraform provisioner..."
 # Registers project with hetzner and adds ssh key for project root.
 #
 
-# Create terraform data dir beforehand to avoid warnings.
-mkdir -p "$PROVISIONER_HOME/.terraform"
+# Create terraform directories beforehand to avoid warnings.
+mkdir -p "$PROVISIONER_HOME/.terraform" "$PROVISIONER_PROVIDER_PATH/.tf-project"
 
 ###
 # Get API token from secrets or bail early.
@@ -46,4 +46,16 @@ provisioner_call() {
 }
 
 # TODO: analyze output json, if it looks like it failed delete json and retry?
-provisioner_call
+if provisioner_call; then
+	keyname=$(jq -rc ".project.value.sshkey_name" "$PROVISIONER_PATH/project.json")
+	key_id=$(jq -rc ".project.value.sshkey_id" "$PROVISIONER_PATH/project.json")
+	
+	# Assuming terraform failed as output doesn't have what was expected.
+	if [[ -z $key_id || -z $keyname ]]; then
+		rm -f "$PROVISIONER_PATH/project.json"
+	fi
+
+# Terraform call failed.
+else
+	rm -f "$PROVISIONER_PATH/project.json"
+fi
