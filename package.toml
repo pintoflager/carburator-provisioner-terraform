@@ -1,6 +1,6 @@
-target = "production"
-
 bin = "terraform"
+
+targets = ["commander"]
 
 [requirements]
 local = ["terraform"]
