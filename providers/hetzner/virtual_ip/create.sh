@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 local app="$1" vip_json vip_instance_dir sp_secretkey cloud_token rundir;
 local run_context="$PWD/$app/.tf-virtual_ip"

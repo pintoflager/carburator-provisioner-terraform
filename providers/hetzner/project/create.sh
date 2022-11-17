@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # ATTENTION: Scripts run from carburator project's public root directory:
 # echo "$PWD"
@@ -43,7 +43,7 @@ export TF_DATA_DIR="$PROVISIONER_HOME/.terraform"
 export TF_PLUGIN_CACHE_DIR="$PROVISIONER_HOME/.terraform"
 
 export TF_VAR_apitoken="$token"
-export TF_VAR_keyname="root"
+export TF_VAR_keyname="${PROJECT_IDENTIFIER}-root"
 export TF_VAR_pubkey="$SSHKEY_ROOT_PUBLIC"
 export TF_VAR_identifier="$PROJECT_IDENTIFIER"
 

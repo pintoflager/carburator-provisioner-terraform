@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # Terraform is required.
 if ! carburator fn integration-installed terraform; then

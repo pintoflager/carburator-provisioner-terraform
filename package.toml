@@ -1,7 +1,6 @@
-bin = "terraform"
+bin = "/usr/bin/env terraform"
 
 targets = ["commander"]
 
-[requirements]
-local = ["terraform"]
+requirements = ["terraform"]
 

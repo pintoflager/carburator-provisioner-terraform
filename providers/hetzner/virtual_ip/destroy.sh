@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 local app="$1" cloud_token tf_context sp_secretkey cloud_token rundir;
 rundir=$(project-rundir)
