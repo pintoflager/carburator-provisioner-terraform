@@ -10,13 +10,14 @@
 # exitcode_can_retry = 110
 # exitcode_unrecoverable = 120
 
-carburator fn echo info "Invoking Terraform provisioner..."
+carburator fn echo info "Invoking Terraform project provisioner..."
 
 ###
 # Registers project with hetzner and adds ssh key for project root.
 #
-resource_dir="$PROVISIONER_PROVIDER_PATH/.tf-project"
-output="$PROVISIONER_PROVIDER_PATH/project.json"
+resource="project"
+resource_dir="$PROVISIONER_PROVIDER_PATH/.tf-$resource"
+output="$PROVISIONER_PROVIDER_PATH/$resource.json"
 
 # Make sure terraform directories exist.
 mkdir -p "$PROVISIONER_HOME/.terraform" "$resource_dir"
@@ -25,8 +26,8 @@ mkdir -p "$PROVISIONER_HOME/.terraform" "$resource_dir"
 # These files can be modified without risk of unwarned overwrite.
 while read -r tf_file; do
 	file=$(basename "$tf_file")
-	cp -n "$tf_file" "$PROVISIONER_PROVIDER_PATH/.tf-project/$file"
-done < <(find "$PROVISIONER_PROVIDER_PATH/project" -maxdepth 1 -iname '*.tf')
+	cp -n "$tf_file" "$PROVISIONER_PROVIDER_PATH/.tf-$resource/$file"
+done < <(find "$PROVISIONER_PROVIDER_PATH/$resource" -maxdepth 1 -iname '*.tf')
 
 ###
 # Get API token from secrets or bail early.
@@ -51,6 +52,11 @@ provisioner_call() {
 	terraform -chdir="$1" init || return 1
 	terraform -chdir="$1" apply -auto-approve || return 1
 	terraform -chdir="$1" output -json > "$2" || return 1
+
+	# Assuming terraform failed as output doesn't have what was expected.
+	if [[ $(jq ".project.value[] | length" "$2") -eq 0 ]]; then
+		rm -f "$output"; exit 110
+	fi
 }
 
 # Analyze output json to determine if project was registered OK.
@@ -58,16 +64,13 @@ if provisioner_call "$resource_dir" "$output"; then
 	keyname=$(jq -rc ".project.value.sshkey_name" "$output")
 	key_id=$(jq -rc ".project.value.sshkey_id" "$output")
 	
-	# Assuming terraform failed as output doesn't have what was expected.
-	if [[ -z $key_id || -z $keyname ]]; then
-		rm -f "$output"
-		exit 110
-	else
-		carburator fn echo success "Terraform provisioner terminated successfully"
-	fi
+	# TODO: renamed var: PROJECT_SSH_KEY_NAME => SSH_KEY_NAME
+	carburator put env "${PROVIDER_NAME}_ROOT_SSHKEY_NAME" "$keyname" \
+		--provisioner terraform
 
-# Terraform call failed.
-else
-	rm -f "$output"
-	exit 110
+	# TODO: renamed var: PROJECT_SSH_KEY_ID => SSH_KEY_ID
+	carburator put env "${PROVIDER_NAME}_ROOT_SSHKEY_NAME" "$key_id" \
+		--provisioner terraform
+	
+	carburator fn echo success "Terraform provisioner terminated successfully"
 fi

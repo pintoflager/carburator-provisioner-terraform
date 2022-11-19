@@ -1,14 +1,53 @@
 #!/usr/bin/env bash
 
-# TODO: environment variables for the script.
+carburator fn echo info "Invoking Terraform node provisioner..."
 
-app="$1" domain="$2"
-tf_context="$PWD/$app/.tf-server"
-servers_json="$PWD/$app/server.json"
-rundir=$(project-rundir)
+###
+# Registers project with hetzner and adds ssh key for project root.
+#
 
-app_id=$(get-env IDENTIFIER "$PWD/$app/.env")
-ssh_key_id=$(get-env PROJECT_SSH_KEY_ID)
+resource="node"
+resource_dir="$PROVISIONER_PROVIDER_PATH/.tf-$resource"
+output="$PROVISIONER_PROVIDER_PATH/$resource.json"
+
+# Make sure terraform resource dir exist.
+mkdir -p "$resource_dir"
+
+while read -r tf_file; do
+	file=$(basename "$tf_file")
+	cp -n "$tf_file" "$PROVISIONER_PROVIDER_PATH/.tf-$resource/$file"
+done < <(find "$PROVISIONER_PROVIDER_PATH/$resource" -maxdepth 1 -iname '*.tf')
+
+###
+# Get API token from secrets or bail early.
+#
+token=$(carburator get secret "$PROVIDER_SECRET_0" --user root); exitcode=$?
+
+if [[ -z $token || $exitcode -gt 0 ]]; then
+	carburator fn echo error \
+		"Could not load Hetzner API token from secret. Unable to proceed"
+	exit 120
+fi
+
+sshkey_id=$(carburator get env "${PROVIDER_NAME}_ROOT_SSHKEY_ID" \
+	--provisioner terraform); exitcode=$?
+
+if [[ -z $sshkey_id || $exitcode -gt 0 ]]; then
+	carburator fn echo error \
+		"Could not load $PROVIDER_NAME sshkey id from terraform/.env. Unable to proceed"
+	exit 120
+fi
+
+export TF_VAR_hcloud_token="$token"
+export TF_VAR_ssh_id="$sshkey_id"
+export TF_DATA_DIR="$PROVISIONER_HOME/.terraform"
+export TF_PLUGIN_CACHE_DIR="$PROVISIONER_HOME/.terraform"
+export TF_VAR_identifier="" # TODO: node group name
+
+
+
+
+
 declare -a servers;
 
 # Quantity of servers to provision is determined from created server instances
@@ -33,15 +72,21 @@ done <<< "$(lsf "$server_instance_dir")"
 # and adds brackets to form an json array.
 printf -v joined '%s,' "${servers[@]}"
 
-export TF_VAR_hcloud_token="$cloud_token"
-export TF_VAR_servers="[${joined%,}]"
-export TF_VAR_domain="$domain"
-export TF_VAR_identifier="$app_id"
-export TF_VAR_ssh_id="$ssh_key_id"
-export TF_DATA_DIR="$rundir/.terraform"
-export TF_PLUGIN_CACHE_DIR="$rundir/.terraform"
+export TF_VAR_servers="[${joined%,}]" # TODO: some better way to build that json.
 
-terraform -chdir="$tf_context" init
-terraform -chdir="$tf_context" apply -auto-approve
-terraform -chdir="$tf_context" output -json > "$servers_json"
 
+
+
+
+
+
+provisioner_call() {
+	terraform -chdir="$1" init || return 1
+	terraform -chdir="$1" apply -auto-approve || return 1
+	terraform -chdir="$1" output -json > "$2" || return 1
+}
+
+# Analyze output json to determine if nodes were registered OK.
+if provisioner_call "$resource_dir" "$output"; then
+
+fi
