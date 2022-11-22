@@ -6,6 +6,9 @@ carburator fn echo info "Invoking Terraform node provisioner..."
 # Registers project with hetzner and adds ssh key for project root.
 #
 
+# TODO:
+env
+
 resource="node"
 resource_dir="$PROVISIONER_PROVIDER_PATH/.tf-$resource"
 output="$PROVISIONER_PROVIDER_PATH/$resource.json"
