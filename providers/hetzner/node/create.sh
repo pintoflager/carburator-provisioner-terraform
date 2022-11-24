@@ -6,6 +6,13 @@ carburator fn echo info "Invoking Hetzner's Terraform server provisioner..."
 # Registers project with hetzner and adds ssh key for project root.
 #
 
+# REMEMBER: Exec time variables can be found as:
+# .exec.env
+# .exec.json
+# .exec.yaml
+# .exec.toml
+# and sourced in script environment (check with 'env' command to print all)
+
 # TODO:
 env
 

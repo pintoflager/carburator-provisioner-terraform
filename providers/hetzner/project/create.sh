@@ -54,23 +54,25 @@ provisioner_call() {
 	terraform -chdir="$1" output -json > "$2" || return 1
 
 	# Assuming terraform failed as output doesn't have what was expected.
-	if [[ $(jq ".project.value | length" "$2") -eq 0 ]]; then
-		rm -f "$output"; exit 110
+	local id name;
+	id=$(carburator get json project.value.sshkey_id text --path "$2") || return 1
+	name=$(carburator get json project.value.sshkey_name text --path "$2") || return 1
+
+	if [[ -z $id || -z $name ]]; then
+		rm -f "$2"; exit 110
+
+	else
+		# TODO: renamed var: PROJECT_SSH_KEY_NAME => SSH_KEY_NAME
+		carburator put env "${PROVIDER_NAME}_ROOT_SSHKEY_NAME" "$name" \
+			--provisioner terraform
+
+		# TODO: renamed var: PROJECT_SSH_KEY_ID => SSH_KEY_ID
+		carburator put env "${PROVIDER_NAME}_ROOT_SSHKEY_NAME" "$id" \
+			--provisioner terraform
 	fi
 }
 
 # Analyze output json to determine if project was registered OK.
 if provisioner_call "$resource_dir" "$output"; then
-	keyname=$(jq -rc ".project.value.sshkey_name" "$output")
-	key_id=$(jq -rc ".project.value.sshkey_id" "$output")
-	
-	# TODO: renamed var: PROJECT_SSH_KEY_NAME => SSH_KEY_NAME
-	carburator put env "${PROVIDER_NAME}_ROOT_SSHKEY_NAME" "$keyname" \
-		--provisioner terraform
-
-	# TODO: renamed var: PROJECT_SSH_KEY_ID => SSH_KEY_ID
-	carburator put env "${PROVIDER_NAME}_ROOT_SSHKEY_NAME" "$key_id" \
-		--provisioner terraform
-	
 	carburator fn echo success "Terraform provisioner terminated successfully"
 fi
