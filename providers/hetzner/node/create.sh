@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-carburator fn echo info "Invoking Terraform node provisioner..."
+carburator fn echo info "Invoking Hetzner's Terraform server provisioner..."
 
 ###
 # Registers project with hetzner and adds ssh key for project root.

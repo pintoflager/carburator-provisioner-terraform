@@ -54,7 +54,7 @@ provisioner_call() {
 	terraform -chdir="$1" output -json > "$2" || return 1
 
 	# Assuming terraform failed as output doesn't have what was expected.
-	if [[ $(jq ".project.value[] | length" "$2") -eq 0 ]]; then
+	if [[ $(jq ".project.value | length" "$2") -eq 0 ]]; then
 		rm -f "$output"; exit 110
 	fi
 }
