@@ -22,7 +22,7 @@ variable "locations" {
 }
 
 variable "servers" {
-  type = list(object(
+  type = list(
     object({
       hostname = string
       os = object({
@@ -37,7 +37,7 @@ variable "servers" {
       ipv4_enabled  = bool
       ipv6_enabled  = bool
     })
-  ))
+  )
   default = [
     {
       ipv4_enabled  = true

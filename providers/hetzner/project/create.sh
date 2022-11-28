@@ -67,7 +67,7 @@ provisioner_call() {
 			--provisioner terraform
 
 		# TODO: renamed var: PROJECT_SSH_KEY_ID => SSH_KEY_ID
-		carburator put env "${PROVIDER_NAME}_ROOT_SSHKEY_NAME" "$id" \
+		carburator put env "${PROVIDER_NAME}_ROOT_SSHKEY_ID" "$id" \
 			--provisioner terraform
 	fi
 }

@@ -59,8 +59,7 @@ identifier=$(carburator get env NODE_GROUP \
 	--path "$PROVISIONER_PROVIDER_PATH/node/.provider.exec.env")
 export TF_VAR_identifier="$identifier"
 
-nodes_json=$(carburator get json nodes \
-	--path "$PROVISIONER_PROVIDER_PATH/node/.provider.exec.json")
+nodes_json=$(cat "$PROVISIONER_PROVIDER_PATH/node/.provider.exec.json")
 export TF_VAR_servers="$nodes_json"
 
 
