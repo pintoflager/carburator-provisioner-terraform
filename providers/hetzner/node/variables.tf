@@ -34,14 +34,10 @@ variable "servers" {
       location = object({
         name = string
       })
-      ipv4_enabled  = bool
-      ipv6_enabled  = bool
+      connectivity = object({
+        public_ipv4 = bool,
+        public_ipv6 = bool
+      })
     })
   )
-  default = [
-    {
-      ipv4_enabled  = true
-      ipv6_enabled  = true
-    }
-  ]
 }
