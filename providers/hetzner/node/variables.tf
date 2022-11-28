@@ -22,20 +22,24 @@ variable "locations" {
 }
 
 variable "servers" {
-  type = list(object({
-    name          = string
-    image         = string
-    location      = string
-    type          = string
-    ipv4_enabled  = bool
-    ipv6_enabled  = bool
-  }))
+  type = list(object(
+    object({
+      hostname = string
+      os = object({
+        name = string
+      })
+      plan = object({
+        name = string
+      })
+      location = object({
+        name = string
+      })
+      ipv4_enabled  = bool
+      ipv6_enabled  = bool
+    })
+  ))
   default = [
     {
-      name          = ""
-      image         = ""
-      location      = ""
-      type          = ""
       ipv4_enabled  = true
       ipv6_enabled  = true
     }

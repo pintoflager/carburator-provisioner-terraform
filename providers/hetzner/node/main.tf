@@ -33,10 +33,10 @@ resource "hcloud_placement_group" "__server_placement" {
 #
 resource "hcloud_server" "servers" {
   count       = length(var.servers)
-  name        = "${var.servers[count.index].name}"
-  image       = "${var.servers[count.index].image}"
-  server_type = "${var.servers[count.index].type}"
-  location    = length(var.servers[count.index].location) > 0 ? var.servers[count.index].location : local.randl[count.index][1]
+  name        = "${var.servers[count.index].0.hostname}"
+  image       = "${var.servers[count.index].0.os.name}"
+  server_type = "${var.servers[count.index].0.plan.name}"
+  location    = length(var.servers[count.index].0.location.name) > 0 ? var.servers[count.index].location : local.randl[count.index][1]
   public_net {
     ipv4_enabled = var.servers[count.index].ipv4_enabled
     ipv6_enabled = var.servers[count.index].ipv6_enabled
