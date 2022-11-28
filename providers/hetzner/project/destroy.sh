@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 
-carburator fn echo info "Invoking Terraform provisioner..."
+carburator print terminal info "Invoking Terraform provisioner..."
 
 ###
 # Registers project with hetzner and adds ssh key for project root.
@@ -15,7 +15,7 @@ output="$PROVISIONER_PROVIDER_PATH/project.json"
 token=$(carburator get secret "$PROVIDER_SECRET_0" --user root); exitcode=$?
 
 if [[ -z $token || $exitcode -gt 0 ]]; then
-	carburator fn echo error \
+	carburator print terminal error \
 		"Could not load Hetzner API token from secret. Unable to proceed"
 	exit 120
 fi
@@ -34,12 +34,12 @@ provisioner_call() {
 }
 
 if provisioner_call "$resource_dir"; then
-	carburator fn echo success "Terraform provisioner terminated successfully"
+	carburator print terminal success "Terraform provisioner terminated successfully"
 
 	rm -rf "$resource_dir"
 	rm -f "$output"
 
-	carburator fn echo success "Project destroyed from service provider Hetzner"
+	carburator print terminal success "Project destroyed from service provider Hetzner"
 else
 	exit 110
 fi

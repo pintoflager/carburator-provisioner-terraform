@@ -10,7 +10,7 @@
 # exitcode_can_retry = 110
 # exitcode_unrecoverable = 120
 
-carburator fn echo info "Invoking Terraform project provisioner..."
+carburator print terminal info "Invoking Terraform project provisioner..."
 
 ###
 # Registers project with hetzner and adds ssh key for project root.
@@ -35,7 +35,7 @@ done < <(find "$PROVISIONER_PROVIDER_PATH/$resource" -maxdepth 1 -iname '*.tf')
 token=$(carburator get secret "$PROVIDER_SECRET_0" --user root); exitcode=$?
 
 if [[ -z $token || $exitcode -gt 0 ]]; then
-	carburator fn echo error \
+	carburator print terminal error \
 		"Could not load Hetzner API token from secret. Unable to proceed"
 	exit 120
 fi
@@ -55,8 +55,8 @@ provisioner_call() {
 
 	# Assuming terraform failed as output doesn't have what was expected.
 	local id name;
-	id=$(carburator get json project.value.sshkey_id text --path "$2") || return 1
-	name=$(carburator get json project.value.sshkey_name text --path "$2") || return 1
+	id=$(carburator get json project.value.sshkey_id string --path "$2") || return 1
+	name=$(carburator get json project.value.sshkey_name string --path "$2") || return 1
 
 	if [[ -z $id || -z $name ]]; then
 		rm -f "$2"; exit 110
@@ -74,5 +74,5 @@ provisioner_call() {
 
 # Analyze output json to determine if project was registered OK.
 if provisioner_call "$resource_dir" "$output"; then
-	carburator fn echo success "Terraform provisioner terminated successfully"
+	carburator print terminal success "Terraform provisioner terminated successfully"
 fi

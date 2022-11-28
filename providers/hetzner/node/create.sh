@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-carburator fn echo info "Invoking Hetzner's Terraform server provisioner..."
+carburator print terminal info "Invoking Hetzner's Terraform server provisioner..."
 
 ###
 # Registers project with hetzner and adds ssh key for project root.
@@ -34,7 +34,7 @@ done < <(find "$PROVISIONER_PROVIDER_PATH/$resource" -maxdepth 1 -iname '*.tf')
 token=$(carburator get secret "$PROVIDER_SECRET_0" --user root); exitcode=$?
 
 if [[ -z $token || $exitcode -gt 0 ]]; then
-	carburator fn echo error \
+	carburator print terminal error \
 		"Could not load Hetzner API token from secret. Unable to proceed"
 	exit 120
 fi
@@ -43,7 +43,7 @@ sshkey_id=$(carburator get env "${PROVIDER_NAME}_ROOT_SSHKEY_ID" \
 	--provisioner terraform); exitcode=$?
 
 if [[ -z $sshkey_id || $exitcode -gt 0 ]]; then
-	carburator fn echo error \
+	carburator print terminal error \
 		"Could not load $PROVIDER_NAME sshkey id from terraform/.env. Unable to proceed"
 	exit 120
 fi
