@@ -1,0 +1,47 @@
+terraform {
+  required_providers {
+    hcloud = {
+      source  = "hetznercloud/hcloud"
+      version = "1.34.3"
+    }
+    template = {
+      version = "~> 2.2.0"
+    }
+    local = {
+      version = "~> 2.0.0"
+    }
+  }
+}
+
+###
+# Say hello.
+#
+provider "hcloud" {
+  token = var.hcloud_token
+}
+
+###
+# Networks.
+#
+resource "hcloud_network" "private_networks" {
+  name     = "${var.network.name}-private"
+  ip_range = var.network.range
+}
+
+# Subnet from instance.
+resource "hcloud_network_subnet" "private_networks_subnet" {
+  network_id   = hcloud_network.private_networks.id
+  type         = var.network.type
+  network_zone = var.network.zone
+  ip_range     = var.network.range
+  depends_on   = [
+    hcloud_network.private_networks
+  ]
+}
+
+# Add server nodes to subnet.
+resource "hcloud_server_network" "private_networks_servers" {
+  count        = length(var.network.nodes)
+  server_id    = var.nodes[index(var.nodes.*.name, var.network.nodes[count.index])].id
+  network_id   = hcloud_network.private_networks.id
+}

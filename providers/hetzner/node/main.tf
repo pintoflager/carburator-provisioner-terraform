@@ -24,7 +24,7 @@ provider "hcloud" {
 # Server placement.
 #
 resource "hcloud_placement_group" "__server_placement" {
-  name = "${var.identifier}-placement"
+  name = "${var.input.node_group}-placement"
   type = "spread"
 }
 
@@ -32,14 +32,14 @@ resource "hcloud_placement_group" "__server_placement" {
 # Servers.
 #
 resource "hcloud_server" "servers" {
-  count       = length(var.servers)
-  name        = "${var.servers[count.index].hostname}"
-  image       = "${var.servers[count.index].os.name}"
-  server_type = "${var.servers[count.index].plan.name}"
-  location    = length(var.servers[count.index].location.name) > 0 ? var.servers[count.index].location : local.randl[count.index][1]
+  count       = length(var.input.nodes)
+  name        = "${var.input.nodes[count.index].hostname}"
+  image       = "${var.input.nodes[count.index].os.name}"
+  server_type = "${var.input.nodes[count.index].plan.name}"
+  location    = "${var.input.nodes[count.index].location.name}"
   public_net {
-    ipv4_enabled = var.servers[count.index].connectivity.public_ipv4
-    ipv6_enabled = var.servers[count.index].connectivity.public_ipv6
+    ipv4_enabled = var.input.nodes[count.index].connectivity.public_ipv4
+    ipv6_enabled = var.input.nodes[count.index].connectivity.public_ipv6
   }
   ssh_keys = [var.ssh_id]
   placement_group_id = hcloud_placement_group.__server_placement.id

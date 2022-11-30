@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-carburator print terminal info "Invoking Hetzner's Terraform server provisioner..."
+carburator print terminal info "Invoking Hetzner's Terraform network provisioner..."
 
 ###
 # Registers project with hetzner and adds ssh key for project root.
@@ -18,7 +18,7 @@ carburator print terminal info "Invoking Hetzner's Terraform server provisioner.
 # .provider.exec.yaml
 # .provider.exec.toml
 
-resource="node"
+resource="network"
 resource_dir="$PROVISIONER_PROVIDER_PATH/.tf-$resource"
 output="$PROVISIONER_PROVIDER_PATH/$resource.json"
 
@@ -31,7 +31,7 @@ while read -r tf_file; do
 done < <(find "$PROVISIONER_PROVIDER_PATH/$resource" -maxdepth 1 -iname '*.tf')
 
 ###
-# Get API token from secrets or bail early.
+# Get API token from secrets or bail out early.
 #
 token=$(carburator get secret "$PROVIDER_SECRET_0" --user root); exitcode=$?
 
@@ -41,23 +41,13 @@ if [[ -z $token || $exitcode -gt 0 ]]; then
 	exit 120
 fi
 
-sshkey_id=$(carburator get env "${PROVIDER_NAME}_ROOT_SSHKEY_ID" \
-	--provisioner terraform); exitcode=$?
-
-if [[ -z $sshkey_id || $exitcode -gt 0 ]]; then
-	carburator print terminal error \
-		"Could not load $PROVIDER_NAME sshkey id from terraform/.env. Unable to proceed"
-	exit 120
-fi
-
 export TF_VAR_hcloud_token="$token"
-export TF_VAR_ssh_id="$sshkey_id"
 export TF_DATA_DIR="$PROVISIONER_HOME/.terraform"
 export TF_PLUGIN_CACHE_DIR="$PROVISIONER_HOME/.terraform"
 
-provider_json=$(cat "$PROVISIONER_PROVIDER_PATH/$resource/.provider.exec.json")
-export TF_VAR_input="$provider_json"
-
+# We only connect nodes provisioned with terraform.
+node_json=$(cat "$PROVISIONER_PROVIDER_PATH/node.json")
+export TF_VAR_nodes="$node_json"
 
 provisioner_call() {
 	terraform -chdir="$1" init || return 1
@@ -65,15 +55,34 @@ provisioner_call() {
 	terraform -chdir="$1" output -json > "$2" || return 1
 
 	# Assuming create failed as we cant load the output
-	if ! carburator get json node.value array --path "$2"; then
-		carburator print terminal error "Create nodes failed."
+	if ! carburator get json network.value array --path "$2"; then
+		carburator print terminal error "Create networks failed."
 		rm -f "$2"; return 1
 	fi
 }
 
-# Analyze output json to determine if nodes were registered OK.
-if provisioner_call "$resource_dir" "$output"; then
-	carburator print terminal success "Create nodes succeeded."	
-else
-	exit 110
+# Network setup is expected to come from service provider with each network
+# zone separately
+if [[ -e "$PROVISIONER_PROVIDER_PATH/$resource/.eu.nodes.json" ]]; then
+	network_json=$(cat "$PROVISIONER_PROVIDER_PATH/$resource/.eu.nodes.json")
+	export TF_VAR_network="$network_json"
+
+	# Analyze output json to determine if networks were registered OK.
+	if provisioner_call "$resource_dir" "$output"; then
+		carburator print terminal success "Europe central networks created."	
+	else
+		exit 110
+	fi
+fi
+
+if [[ -e "$PROVISIONER_PROVIDER_PATH/$resource/.us.nodes.json" ]]; then
+	network_json=$(cat "$PROVISIONER_PROVIDER_PATH/$resource/.us.nodes.json")
+	export TF_VAR_network="$network_json"
+
+	# Analyze output json to determine if networks were registered OK.
+	if provisioner_call "$resource_dir" "$output"; then
+		carburator print terminal success "USA east networks created."	
+	else
+		exit 110
+	fi
 fi

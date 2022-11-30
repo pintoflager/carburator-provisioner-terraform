@@ -1,3 +1,6 @@
+###
+# Principal output for project.
+#
 output "project" {
   description = "Project registration output"
   value    = {
