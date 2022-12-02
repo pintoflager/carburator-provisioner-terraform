@@ -2,7 +2,7 @@ terraform {
   required_providers {
     hcloud = {
       source  = "hetznercloud/hcloud"
-      version = "1.34.3"
+      version = "1.36.0"
     }
     template = {
       version = "~> 2.2.0"
@@ -24,7 +24,7 @@ provider "hcloud" {
 # Server placement.
 #
 resource "hcloud_placement_group" "__server_placement" {
-  name = "${var.input.node_group}-placement"
+  name = "${var.node_group}-placement"
   type = "spread"
 }
 
@@ -32,14 +32,14 @@ resource "hcloud_placement_group" "__server_placement" {
 # Servers.
 #
 resource "hcloud_server" "servers" {
-  count       = length(var.input.nodes)
-  name        = "${var.input.nodes[count.index].hostname}"
-  image       = "${var.input.nodes[count.index].os.name}"
-  server_type = "${var.input.nodes[count.index].plan.name}"
-  location    = "${var.input.nodes[count.index].location.name}"
+  count       = length(var.nodes.nodes)
+  name        = "${var.nodes.nodes[count.index].hostname}"
+  image       = "${var.nodes.nodes[count.index].os.name}"
+  server_type = "${var.nodes.nodes[count.index].plan.name}"
+  location    = "${var.nodes.nodes[count.index].location.name}"
   public_net {
-    ipv4_enabled = var.input.nodes[count.index].connectivity.public_ipv4
-    ipv6_enabled = var.input.nodes[count.index].connectivity.public_ipv6
+    ipv4_enabled = var.nodes.nodes[count.index].connectivity.ipv4
+    ipv6_enabled = var.nodes.nodes[count.index].connectivity.ipv6
   }
   ssh_keys = [var.ssh_id]
   placement_group_id = hcloud_placement_group.__server_placement.id

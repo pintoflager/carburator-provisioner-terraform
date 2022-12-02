@@ -2,7 +2,7 @@ terraform {
   required_providers {
     hcloud = {
       source  = "hetznercloud/hcloud"
-      version = "1.34.3"
+      version = "1.36.0"
     }
     template = {
       version = "~> 2.2.0"
@@ -24,16 +24,16 @@ provider "hcloud" {
 # Networks.
 #
 resource "hcloud_network" "private_networks" {
-  name     = "${var.network.name}-private"
-  ip_range = var.network.range
+  name     = "${var.networks.network.name}-private"
+  ip_range = var.networks.network.range
 }
 
 # Subnet from instance.
 resource "hcloud_network_subnet" "private_networks_subnet" {
   network_id   = hcloud_network.private_networks.id
-  type         = var.network.type
-  network_zone = var.network.zone
-  ip_range     = var.network.range
+  type         = var.networks.network.type
+  network_zone = var.networks.network.zone
+  ip_range     = var.networks.network.range
   depends_on   = [
     hcloud_network.private_networks
   ]
@@ -41,7 +41,7 @@ resource "hcloud_network_subnet" "private_networks_subnet" {
 
 # Add server nodes to subnet.
 resource "hcloud_server_network" "private_networks_servers" {
-  count        = length(var.network.nodes)
-  server_id    = var.nodes[index(var.nodes.*.name, var.network.nodes[count.index])].id
+  count        = length(var.networks.nodes)
+  server_id    = var.nodes[index(var.nodes.*.name, var.networks.nodes[count.index])].id
   network_id   = hcloud_network.private_networks.id
 }

@@ -5,25 +5,23 @@ variable "hcloud_token" {
   sensitive = true
 }
 
-variable "network" {
-  type = list(
-    object({
-      name       = string
-      range      = string
-      zone       = string
-      type       = string
-      nodes      = list(string)
+variable "networks" {
+  type = object({
+    network = object({
+        name       = string
+        range      = string
+        zone       = string
+        type       = string
     })
-  )
+    nodes          = list(string)
+  })
 }
 
 variable "nodes" {
-  type = object({
-    value = list(
-      object({
-        name     = string
-        id       = string
-      })
-    )
-  })
+  type = list(
+    object({
+      name     = string
+      id       = string
+    })
+  )
 }

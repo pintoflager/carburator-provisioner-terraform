@@ -2,10 +2,6 @@
 
 carburator print terminal info "Invoking Hetzner's Terraform network provisioner..."
 
-###
-# Registers project with hetzner and adds ssh key for project root.
-#
-
 # REMEMBER: runtime variables for provisioner are next to this script as:
 # .exec.env << Same as the sourced environment (check with 'env' command)
 # .exec.json
@@ -46,8 +42,9 @@ export TF_DATA_DIR="$PROVISIONER_HOME/.terraform"
 export TF_PLUGIN_CACHE_DIR="$PROVISIONER_HOME/.terraform"
 
 # We only connect nodes provisioned with terraform.
-node_json=$(cat "$PROVISIONER_PROVIDER_PATH/node.json")
-export TF_VAR_nodes="$node_json"
+nodes=$(carburator get json node.value array-raw \
+	--path "$PROVISIONER_PROVIDER_PATH/node.json")
+export TF_VAR_nodes="$nodes"
 
 provisioner_call() {
 	terraform -chdir="$1" init || return 1
@@ -55,7 +52,7 @@ provisioner_call() {
 	terraform -chdir="$1" output -json > "$2" || return 1
 
 	# Assuming create failed as we cant load the output
-	if ! carburator get json network.value array --path "$2"; then
+	if ! carburator has json network.value --path "$2"; then
 		carburator print terminal error "Create networks failed."
 		rm -f "$2"; return 1
 	fi
@@ -65,7 +62,7 @@ provisioner_call() {
 # zone separately
 if [[ -e "$PROVISIONER_PROVIDER_PATH/$resource/.eu.nodes.json" ]]; then
 	network_json=$(cat "$PROVISIONER_PROVIDER_PATH/$resource/.eu.nodes.json")
-	export TF_VAR_network="$network_json"
+	export TF_VAR_networks="$network_json"
 
 	# Analyze output json to determine if networks were registered OK.
 	if provisioner_call "$resource_dir" "$output"; then
@@ -77,7 +74,7 @@ fi
 
 if [[ -e "$PROVISIONER_PROVIDER_PATH/$resource/.us.nodes.json" ]]; then
 	network_json=$(cat "$PROVISIONER_PROVIDER_PATH/$resource/.us.nodes.json")
-	export TF_VAR_network="$network_json"
+	export TF_VAR_networks="$network_json"
 
 	# Analyze output json to determine if networks were registered OK.
 	if provisioner_call "$resource_dir" "$output"; then

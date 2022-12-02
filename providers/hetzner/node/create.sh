@@ -55,8 +55,13 @@ export TF_VAR_ssh_id="$sshkey_id"
 export TF_DATA_DIR="$PROVISIONER_HOME/.terraform"
 export TF_PLUGIN_CACHE_DIR="$PROVISIONER_HOME/.terraform"
 
-provider_json=$(cat "$PROVISIONER_PROVIDER_PATH/$resource/.provider.exec.json")
-export TF_VAR_input="$provider_json"
+node_group=$(carburator get json nodes.node_group_name string \
+	--path "$PROVISIONER_PROVIDER_PATH/$resource/.provider.exec.json")
+export TF_VAR_node_group="$node_group"
+
+nodes=$(carburator get json nodes array-raw \
+	--path "$PROVISIONER_PROVIDER_PATH/$resource/.provider.exec.json")
+export TF_VAR_nodes="$nodes"
 
 
 provisioner_call() {
@@ -65,7 +70,7 @@ provisioner_call() {
 	terraform -chdir="$1" output -json > "$2" || return 1
 
 	# Assuming create failed as we cant load the output
-	if ! carburator get json node.value array --path "$2"; then
+	if ! carburator has json node.value --path "$2"; then
 		carburator print terminal error "Create nodes failed."
 		rm -f "$2"; return 1
 	fi
@@ -73,7 +78,14 @@ provisioner_call() {
 
 # Analyze output json to determine if nodes were registered OK.
 if provisioner_call "$resource_dir" "$output"; then
-	carburator print terminal success "Create nodes succeeded."	
+	carburator print terminal success "Create nodes succeeded."
+	carburator print terminal info "Extracting IP address blocks..."
+
+	while read -r node; do
+		# TODO:
+		echo "aaaaaand... $node"
+	done < <(carburator get json node.value array --path "$output")
+
 else
 	exit 110
 fi

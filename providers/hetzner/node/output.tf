@@ -5,7 +5,6 @@ output "node" {
   description = "Server details for ansible."
   value = [
     for i, v in hcloud_server.servers: ({
-      cloud_provider      = "hetzner"
       name                = v.name
       id                  = v.id
       image               = v.image

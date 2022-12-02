@@ -11,26 +11,27 @@ variable "ssh_id" {
   default = ""
 }
 
-variable "input" {
-  type = object({
-    node_group = string
-    nodes = list(
-      object({
-        hostname = string
-        os = object({
-          name = string
-        })
-        plan = object({
-          name = string
-        })
-        location = object({
-          name = string
-        })
-        connectivity = object({
-          public_ipv4 = bool
-          public_ipv6 = bool
-        })
+variable "node_group" {
+  type = string
+}
+
+variable "nodes" {
+  type = list(
+    object({
+      hostname = string
+      os = object({
+        name = string
       })
-    )
-  })
+      plan = object({
+        name = string
+      })
+      location = object({
+        name = string
+      })
+      connectivity = object({
+        ipv4 = bool
+        ipv6 = bool
+      })
+    })  
+  )
 }
