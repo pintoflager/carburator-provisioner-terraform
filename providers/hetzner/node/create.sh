@@ -55,7 +55,7 @@ export TF_VAR_ssh_id="$sshkey_id"
 export TF_DATA_DIR="$PROVISIONER_HOME/.terraform"
 export TF_PLUGIN_CACHE_DIR="$PROVISIONER_HOME/.terraform"
 
-node_group=$(carburator get json nodes.node_group_name string \
+node_group=$(carburator get json node_group_name string \
 	--path "$PROVISIONER_PROVIDER_PATH/$resource/.provider.exec.json")
 export TF_VAR_node_group="$node_group"
 
@@ -81,10 +81,31 @@ if provisioner_call "$resource_dir" "$output"; then
 	carburator print terminal success "Create nodes succeeded."
 	carburator print terminal info "Extracting IP address blocks..."
 
-	while read -r node; do
-		# TODO:
-		echo "aaaaaand... $node"
-	done < <(carburator get json node.value array --path "$output")
+	len=$(carburator get json node.value array --path "$output" | wc -l)
+	for (( i=0; i<len; i++ )); do
+		# Easiest way to find the right node is with it's UUID
+		node_uuid=$(carburator get json "node.value.$i.labels.uuid" string -p "$output")
+
+		# With Hetzner we know ipv4 comes without cidr, obviously these blocks are
+		# expensive and ipv4's running out. Will be suffixed with /32 automatically.
+		ipv4=$(carburator get json "node.value.$i.ipv4" string -p "$output")
+
+		# Register block and grab first (and only) ip from it.
+		if [[ -n $ipv4 && $ipv4 != null ]]; then
+			uuid=$(carburator address register-block "$ipv4" --grab --uuid) || exit 1
+			carburator node address --node-uuid "$node_uuid" --address-uuid "$uuid"
+		fi
+
+		# Hetzner gives with each ipv6 address a full /64 block so let's register
+		# that then.
+		ipv6=$(carburator get json "node.value.$i.ipv6_block" string -p "$output")
+		
+		# Register block and grab first ip from it (same as node.value.$i.ipv6)
+		if [[ -n $ipv6 && $ipv6 != null ]]; then
+			uuid=$(carburator address register-block "$ipv6" --grab --uuid) || exit 1
+			carburator node address --node-uuid "$node_uuid" --address-uuid "$uuid"
+		fi
+	done
 
 else
 	exit 110

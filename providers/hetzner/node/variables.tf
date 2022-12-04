@@ -19,6 +19,7 @@ variable "nodes" {
   type = list(
     object({
       hostname = string
+      uuid = string
       os = object({
         name = string
       })
