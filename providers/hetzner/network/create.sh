@@ -72,13 +72,25 @@ if [[ -e "$PROVISIONER_PROVIDER_PATH/$resource/.eu.nodes.json" ]]; then
 	fi
 fi
 
-if [[ -e "$PROVISIONER_PROVIDER_PATH/$resource/.us.nodes.json" ]]; then
-	network_json=$(cat "$PROVISIONER_PROVIDER_PATH/$resource/.us.nodes.json")
+if [[ -e "$PROVISIONER_PROVIDER_PATH/$resource/.us.east.nodes.json" ]]; then
+	network_json=$(cat "$PROVISIONER_PROVIDER_PATH/$resource/.us.east.nodes.json")
 	export TF_VAR_networks="$network_json"
 
 	# Analyze output json to determine if networks were registered OK.
 	if provisioner_call "$resource_dir" "$output"; then
 		carburator print terminal success "USA east networks created."	
+	else
+		exit 110
+	fi
+fi
+
+if [[ -e "$PROVISIONER_PROVIDER_PATH/$resource/.us.west.nodes.json" ]]; then
+	network_json=$(cat "$PROVISIONER_PROVIDER_PATH/$resource/.us.east.west.json")
+	export TF_VAR_networks="$network_json"
+
+	# Analyze output json to determine if networks were registered OK.
+	if provisioner_call "$resource_dir" "$output"; then
+		carburator print terminal success "USA west networks created."	
 	else
 		exit 110
 	fi

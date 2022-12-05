@@ -1,4 +1,6 @@
+name = "terraform"
 version = "0.1.0"
+collection = "provisioner"
 bin = "/usr/bin/env terraform"
 
 targets = ["commander"]
