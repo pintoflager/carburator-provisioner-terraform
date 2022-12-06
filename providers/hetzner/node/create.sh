@@ -81,6 +81,7 @@ if provisioner_call "$resource_dir" "$output"; then
 	carburator print terminal success "Create nodes succeeded."
 	carburator print terminal info "Extracting IP address blocks..."
 
+	# Register IP address blocks and addresses
 	len=$(carburator get json node.value array --path "$output" | wc -l)
 	for (( i=0; i<len; i++ )); do
 		# Easiest way to find the right node is with it's UUID
@@ -92,18 +93,33 @@ if provisioner_call "$resource_dir" "$output"; then
 
 		# Register block and grab first (and only) ip from it.
 		if [[ -n $ipv4 && $ipv4 != null ]]; then
-			uuid=$(carburator address register-block "$ipv4" --grab --uuid) || exit 1
-			carburator node address --node-uuid "$node_uuid" --address-uuid "$uuid"
+			address_block_uuid=$(carburator address register-block "$ipv4" \
+				--grab \
+				--uuid \
+				--can-exist) || exit 120
+
+			carburator node address \
+				--node-uuid "$node_uuid" \
+				--address-uuid "$address_block_uuid"
 		fi
 
 		# Hetzner gives with each ipv6 address a full /64 block so let's register
 		# that then.
-		ipv6=$(carburator get json "node.value.$i.ipv6_block" string -p "$output")
+		ipv6_block=$(carburator get json "node.value.$i.ipv6_block" string -p "$output")
 		
-		# Register block and grab first ip from it (same as node.value.$i.ipv6)
-		if [[ -n $ipv6 && $ipv6 != null ]]; then
-			uuid=$(carburator address register-block "$ipv6" --grab --uuid) || exit 1
-			carburator node address --node-uuid "$node_uuid" --address-uuid "$uuid"
+		# Register block and the IP that Hetzner has set up for the node.
+		if [[ -n $ipv6_block && $ipv6_block != null ]]; then
+			ipv6=$(carburator get json "node.value.$i.ipv6" string -p "$output")
+
+			address_block_uuid=$(carburator address register-block "$ipv6_block" \
+				--uuid \
+				--grab \
+				--grab-ip "$ipv6" \
+				--can-exist) || exit 120
+
+			carburator node address \
+				--node-uuid "$node_uuid" \
+				--address-uuid "$address_block_uuid" || exit 120
 		fi
 	done
 

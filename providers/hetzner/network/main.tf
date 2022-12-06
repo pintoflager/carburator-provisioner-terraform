@@ -44,4 +44,7 @@ resource "hcloud_server_network" "private_networks_servers" {
   count        = length(var.networks.nodes)
   server_id    = var.nodes[index(var.nodes.*.name, var.networks.nodes[count.index])].id
   network_id   = hcloud_network.private_networks.id
+  labels = {
+    "node_uuid" : "${var.nodes[index(var.nodes.*.name, var.networks.nodes[count.index])].labels.uuid}"
+  }
 }

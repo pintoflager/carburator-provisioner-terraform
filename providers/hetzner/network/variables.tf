@@ -13,7 +13,7 @@ variable "networks" {
         zone       = string
         type       = string
     })
-    nodes          = list(string)
+    nodes        = list(string)
   })
 }
 
@@ -22,6 +22,9 @@ variable "nodes" {
     object({
       name     = string
       id       = string
+      labels   = object({
+        uuid      = string
+      })
     })
   )
 }

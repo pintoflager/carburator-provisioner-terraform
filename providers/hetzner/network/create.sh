@@ -78,7 +78,7 @@ if [[ -e "$PROVISIONER_PROVIDER_PATH/$resource/.us.east.nodes.json" ]]; then
 
 	# Analyze output json to determine if networks were registered OK.
 	if provisioner_call "$resource_dir" "$output"; then
-		carburator print terminal success "USA east networks created."	
+		carburator print terminal success "USA east networks created."
 	else
 		exit 110
 	fi
@@ -95,3 +95,33 @@ if [[ -e "$PROVISIONER_PROVIDER_PATH/$resource/.us.west.nodes.json" ]]; then
 		exit 110
 	fi
 fi
+
+# Register network IP addresses
+len=$(carburator get json node.value array --path "$output" | wc -l)
+network_range=$(carburator get json "network.value.ip_range" string -p "$output")
+
+# Loop all nodes attached to private network.
+for (( i=0; i<len; i++ )); do
+	# Easiest way to find the right node is with it's UUID
+	node_uuid=$(carburator get json "node.value.$i.labels.node_uuid" string \
+		-p "$output") || exit 120
+
+	# Private network addresses are always ipv4
+	ip=$(carburator get json "node.value.$i.ip" string -p "$output") || exit 120
+
+	# Register block and grab first (and only) ip from it.
+	if [[ -z $ip || $ip == null ]]; then
+		carburator print terminal error "Unable to load IP for node in index '$i'"
+		exit 120
+	fi
+
+	net_uuid=$(carburator address register-block "$network_range" \
+		--grab \
+		--uuid \
+		--grab-ip "$ip" \
+		--can-exist) || exit 120
+
+	carburator node address \
+		--node-uuid "$node_uuid" \
+		--address-uuid "$net_uuid"
+done
