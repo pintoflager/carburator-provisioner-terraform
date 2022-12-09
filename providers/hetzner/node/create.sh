@@ -95,6 +95,7 @@ if provisioner_call "$resource_dir" "$output"; then
 		if [[ -n $ipv4 && $ipv4 != null ]]; then
 			address_block_uuid=$(carburator address register-block "$ipv4" \
 				--grab \
+				--grab-ip "$ipv4" \
 				--uuid \
 				--can-exist) || exit 120
 

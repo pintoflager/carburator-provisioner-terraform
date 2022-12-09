@@ -26,7 +26,6 @@ output "node" {
       ip                  = v.ip
       server_id           = v.server_id
       network_id          = v.network_id
-      labels              = v.labels
     })
   ]
 }

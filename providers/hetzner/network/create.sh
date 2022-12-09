@@ -99,29 +99,51 @@ fi
 # Register network IP addresses
 len=$(carburator get json node.value array --path "$output" | wc -l)
 network_range=$(carburator get json "network.value.ip_range" string -p "$output")
+nlen=$(carburator get json node.value array \
+	-p "$PROVISIONER_PROVIDER_PATH/node.json" | wc -l)
 
 # Loop all nodes attached to private network.
 for (( i=0; i<len; i++ )); do
-	# Easiest way to find the right node is with it's UUID
-	node_uuid=$(carburator get json "node.value.$i.labels.node_uuid" string \
+	# Find node uuid with terraform node id.
+	id=$(carburator get json "node.value.$i.server_id" number \
 		-p "$output") || exit 120
-
+	
 	# Private network addresses are always ipv4
 	ip=$(carburator get json "node.value.$i.ip" string -p "$output") || exit 120
 
-	# Register block and grab first (and only) ip from it.
 	if [[ -z $ip || $ip == null ]]; then
-		carburator print terminal error "Unable to load IP for node in index '$i'"
+		carburator print terminal error "Unable to find IP for node with ID '$id'"
 		exit 120
 	fi
 
-	net_uuid=$(carburator address register-block "$network_range" \
-		--grab \
-		--uuid \
-		--grab-ip "$ip" \
-		--can-exist) || exit 120
+	# Loop all nodes from node.json, find node uuid, add block and address.
+	for (( j=0; j<nlen; j++ )); do
+		node_id=$(carburator get json "node.value.$i.id" string \
+			-p "$PROVISIONER_PROVIDER_PATH/node.json")
 
-	carburator node address \
-		--node-uuid "$node_uuid" \
-		--address-uuid "$net_uuid"
+		# Not what we're looking for.
+		if [[ $node_id != "$id" ]]; then continue; fi
+
+		# Easiest way to find the right node is with it's UUID
+		node_uuid=$(carburator get json "node.value.$i.labels.uuid" string \
+			-p "$PROVISIONER_PROVIDER_PATH/node.json")
+
+		# Register block and grab first (and only) ip from it.
+		net_uuid=$(carburator address register-block "$network_range" \
+			--grab \
+			--uuid \
+			--grab-ip "$ip" \
+			--can-exist) || exit 120
+
+		carburator node address \
+			--node-uuid "$node_uuid" \
+			--address-uuid "$net_uuid"
+
+		# Get the hell out of here and to the next network iteration.
+		continue 2;
+	done
+
+	# We should be able to find all nodes, if not, crap.
+	carburator print terminal error "Unable to find node matching ID '$id'"
+	exit 120
 done

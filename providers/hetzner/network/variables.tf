@@ -22,9 +22,6 @@ variable "nodes" {
     object({
       name     = string
       id       = string
-      labels   = object({
-        uuid      = string
-      })
     })
   )
 }
