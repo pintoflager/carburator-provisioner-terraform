@@ -5,6 +5,3 @@ bin = "/usr/bin/env terraform"
 
 targets = ["commander"]
 providers = ["service"]
-
-requirements = ["terraform"]
-

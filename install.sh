@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+# Terraform is required.
+if carburator fn integration-installed terraform; then
+  carburator print terminal info "Terraform found, skipping install..."
+  return
+fi
+
+# TODO: Untested below.
+
+carburator print terminal warn \
+  "Missing required program Terraform. Trying to install it before proceeding..."
+
+# Try to download and install terraform binary
+version="1.3.6"
+path="https://releases.hashicorp.com/terraform/${version}/terraform_${version}_linux_${arch}.zip"
+arch="$(uname -m)"
+
+if [ "$arch" = "x86_64" ]; then
+  arch="amd64"
+elif [ "$arch" = "armv7l" ]; then
+  arch="arm"
+elif [ "$arch" = "aarch64" ]; then
+  arch="arm64"
+else
+  carburator print terminal error
+    "Unsupported arch: $arch" && exit 120
+fi
+
+wget -qO- "$path" | bsdtar -xvf- -C /usr/local/bin/
