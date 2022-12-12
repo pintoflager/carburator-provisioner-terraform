@@ -3,7 +3,7 @@
 # Terraform is required.
 if carburator fn integration-installed terraform; then
   carburator print terminal info "Terraform found, skipping install..."
-  return
+  exit
 fi
 
 # TODO: Untested below.
@@ -13,7 +13,6 @@ carburator print terminal warn \
 
 # Try to download and install terraform binary
 version="1.3.6"
-path="https://releases.hashicorp.com/terraform/${version}/terraform_${version}_linux_${arch}.zip"
 arch="$(uname -m)"
 
 if [ "$arch" = "x86_64" ]; then
@@ -27,4 +26,6 @@ else
     "Unsupported arch: $arch" && exit 120
 fi
 
-wget -qO- "$path" | bsdtar -xvf- -C /usr/local/bin/
+path="https://releases.hashicorp.com/terraform/${version}/terraform_${version}_linux_${arch}.zip"
+
+sudo wget -qO- "$path" | bsdtar -xvf- -C /usr/local/bin/
