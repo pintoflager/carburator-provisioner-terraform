@@ -1,11 +1,5 @@
 #!/usr/bin/env bash
 
-
-carburator print terminal info "Invoking Terraform provisioner..."
-
-###
-# Registers project with hetzner and adds ssh key for project root.
-#
 resource_dir="$PROVISIONER_PROVIDER_PATH/.tf-project"
 output="$PROVISIONER_PROVIDER_PATH/project.json"
 

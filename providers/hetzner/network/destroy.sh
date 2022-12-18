@@ -1,42 +1,74 @@
 #!/usr/bin/env bash
 
-# TODO: environment variables for the script.
+resource="network"
+resource_dir="$PROVISIONER_PROVIDER_PATH/.tf-$resource"
+output="$PROVISIONER_PROVIDER_PATH/$resource.json"
 
-local app="$1" lscope="$2" servers app_id ssh_key_id net_zone tf_context;
-local server_json="$PWD/$app/server.json" rundir;
-rundir=$(project-rundir)
+while read -r tf_file; do
+	file=$(basename "$tf_file")
+	cp -n "$tf_file" "$PROVISIONER_PROVIDER_PATH/.tf-$resource/$file"
+done < <(find "$PROVISIONER_PROVIDER_PATH/$resource" -maxdepth 1 -iname '*.tf')
 
-# Don't bother without resources.
-if [[ ! -e "$PWD/$app/server.json" ]]; then
-	echo-error "Fail. server.json was not found." && return 1
+###
+# Get API token from secrets or bail out early.
+#
+token=$(carburator get secret "$PROVIDER_SECRET_0" --user root); exitcode=$?
+
+if [[ -z $token || $exitcode -gt 0 ]]; then
+	carburator print terminal error \
+		"Could not load Hetzner API token from secret. Unable to proceed"
+	exit 120
 fi
 
-app_id=$(get-env IDENTIFIER "$PWD/$app/.env")
-ssh_key_id=$(get-env PROJECT_SSH_KEY_ID)
-net_zone=$(get-env NETWORK_ZONE "$PWD/$app/.env")
-tf_context="$PWD/$app/.tf-server"
+export TF_VAR_hcloud_token="$token"
+export TF_DATA_DIR="$PROVISIONER_HOME/.terraform"
+export TF_PLUGIN_CACHE_DIR="$PROVISIONER_HOME/.terraform"
 
-# Scope of destruction can be defined with an argument
-if [[ -z $lscope ]]; then
-	servers=$(jq -rc ".servers.value" "$server_json")
-else
-	local names; names=$(arr-to-jsonarr "${lscope//, / }")
-	# REMEMBER: jq | how to select multiple matching objects from json array
-	servers=$(jq -rc ".servers.value[] | select([.name] | inside($names))" \
-	  "$server_json")
+# We only connect nodes provisioned with terraform.
+nodes=$(carburator get json node.value array-raw \
+	--path "$PROVISIONER_PROVIDER_PATH/node.json")
+export TF_VAR_nodes="$nodes"
+
+provisioner_call() {
+	terraform -chdir="$1" init || return 1
+	terraform -chdir="$1" destroy -auto-approve || return 1
+}
+
+# Network setup is expected to come from service provider with each network
+# zone separately
+if [[ -e "$PROVISIONER_PROVIDER_PATH/$resource/.eu.nodes.json" ]]; then
+	network_json=$(cat "$PROVISIONER_PROVIDER_PATH/$resource/.eu.nodes.json")
+	export TF_VAR_networks="$network_json"
+
+	if provisioner_call "$resource_dir"; then
+		carburator print terminal success "Europe central networks destroyed."	
+	else
+		exit 110
+	fi
 fi
 
-export TF_VAR_hcloud_token="$cloud_token"
-export TF_VAR_ssh_id="$ssh_key_id"
-export TF_VAR_identifier="$app_id"
-export TF_VAR_network_zone="$net_zone"
-export TF_VAR_servers="$servers"
-export TF_DATA_DIR="$rundir/.terraform"
-export TF_PLUGIN_CACHE_DIR="$rundir/.terraform"
+if [[ -e "$PROVISIONER_PROVIDER_PATH/$resource/.us.east.nodes.json" ]]; then
+	network_json=$(cat "$PROVISIONER_PROVIDER_PATH/$resource/.us.east.nodes.json")
+	export TF_VAR_networks="$network_json"
 
-if [[ -e $tf_context ]]; then
-	terraform -chdir="$tf_context" init
-	terraform -chdir="$tf_context" destroy -auto-approve
-	echo-success "Service provider resource $app destroyed"
+	if provisioner_call "$resource_dir"; then
+		carburator print terminal success "USA east networks destroyed."
+	else
+		exit 110
+	fi
 fi
 
+if [[ -e "$PROVISIONER_PROVIDER_PATH/$resource/.us.west.nodes.json" ]]; then
+	network_json=$(cat "$PROVISIONER_PROVIDER_PATH/$resource/.us.east.west.json")
+	export TF_VAR_networks="$network_json"
+
+	if provisioner_call "$resource_dir"; then
+		carburator print terminal success "USA west networks destroyed."	
+	else
+		exit 110
+	fi
+fi
+
+# Destroy directories and files
+rm -rf "$resource_dir"
+rm -f "$output"
