@@ -1,7 +1,9 @@
 name = "terraform"
 version = "0.1.0"
 collection = "Provisioner"
-targets = ["Commander"]
-providers = ["ServiceProvider"]
+project_roles = ["Commander"]
 
-bin = "/usr/bin/env terraform"
+providers = ["ServiceProvider"]
+retry_times = 3
+retry_interval = 10
+boot_wait = 15
