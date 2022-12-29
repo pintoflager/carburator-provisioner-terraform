@@ -129,13 +129,13 @@ for (( i=0; i<len; i++ )); do
 			-p "$PROVISIONER_PROVIDER_PATH/node.json")
 
 		# Register block and grab first (and only) ip from it.
-		net_uuid=$(carburator address register-block "$network_range" \
+		net_uuid=$(carburator-commander address register-block "$network_range" \
 			--grab \
 			--uuid \
 			--grab-ip "$ip" \
 			--can-exist) || exit 120
 
-		carburator node address \
+		carburator-commander node address \
 			--node-uuid "$node_uuid" \
 			--address-uuid "$net_uuid"
 
