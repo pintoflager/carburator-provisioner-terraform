@@ -135,6 +135,7 @@ for (( i=0; i<len; i++ )); do
 			--grab-ip "$ip" \
 			--can-exist) || exit 120
 
+		# Point address to node.
 		carburator-commander node address \
 			--node-uuid "$node_uuid" \
 			--address-uuid "$net_uuid"

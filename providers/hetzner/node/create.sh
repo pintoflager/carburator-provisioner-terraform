@@ -93,13 +93,14 @@ if provisioner_call "$resource_dir" "$output"; then
 
 		# Register block and grab first (and only) ip from it.
 		if [[ -n $ipv4 && $ipv4 != null ]]; then
-			address_block_uuid=$(carburator address register-block "$ipv4" \
+			address_block_uuid=$(carburator-commander address register-block "$ipv4" \
 				--grab \
 				--grab-ip "$ipv4" \
 				--uuid \
 				--can-exist) || exit 120
 
-			carburator node address \
+			# Point address to node.
+			carburator-commander node address \
 				--node-uuid "$node_uuid" \
 				--address-uuid "$address_block_uuid"
 		fi
@@ -112,13 +113,14 @@ if provisioner_call "$resource_dir" "$output"; then
 		if [[ -n $ipv6_block && $ipv6_block != null ]]; then
 			ipv6=$(carburator get json "node.value.$i.ipv6" string -p "$output")
 
-			address_block_uuid=$(carburator address register-block "$ipv6_block" \
+			address_block_uuid=$(carburator-commander address register-block "$ipv6_block" \
 				--uuid \
 				--grab \
 				--grab-ip "$ipv6" \
 				--can-exist) || exit 120
 
-			carburator node address \
+			# Point address to node.
+			carburator-commander node address \
 				--node-uuid "$node_uuid" \
 				--address-uuid "$address_block_uuid" || exit 120
 		fi

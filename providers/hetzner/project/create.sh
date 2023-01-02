@@ -61,6 +61,7 @@ provisioner_call() {
 	if [[ -z $id || -z $name ]]; then
 		rm -f "$2"; exit 110
 
+	# TODO: Most likely saving below env varibles was pointless.
 	else
 		# TODO: renamed var: PROJECT_SSH_KEY_NAME => SSH_KEY_NAME
 		carburator put env "${PROVIDER_NAME}_ROOT_SSHKEY_NAME" "$name" \
