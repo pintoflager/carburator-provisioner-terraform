@@ -90,25 +90,21 @@ if provisioner_call "$resource_dir" "$output"; then
 		# With Hetzner we know ipv4 comes without cidr. That's pretty obvious as these
 		# blocks are expensive and ipv4's are running out.
 		#
-		# --can-exist check is important here as this script runs on every provisioner
-		# call. This check is for spesific address block.
-		#
-		# This means we have to define the CIDR block we use.
-		# register-block value could be suffixed with /32 as well but maybe we'll
-		# go with the --cidr flag here.
+		# We have to define the CIDR block we use.
+		# register-block value could be suffixed with /32 as well but lets leave a
+		# reminder how to use the --cidr flag.
 		ipv4=$(carburator get json "node.value.$i.ipv4" string -p "$output")
 
 		# Register block and grab first (and only) ip from it.
 		if [[ -n $ipv4 && $ipv4 != null ]]; then
-			address_block_uuid=$(carburator-commander address register-block "$ipv4" \
+			address_block_uuid=$(carburator-rule address register-block "$ipv4" \
 				--grab \
 				--grab-ip "$ipv4" \
 				--uuid \
-				--cidr 32 \
-				--can-exist) || exit 120
+				--cidr 32) || exit 120
 
 			# Point address to node.
-			carburator-commander node address \
+			carburator-rule node address \
 				--node-uuid "$node_uuid" \
 				--address-uuid "$address_block_uuid"
 		fi
@@ -123,14 +119,13 @@ if provisioner_call "$resource_dir" "$output"; then
 
 			# This is the other way to handle the address block registration.
 			# register-block value has /cidr.
-			address_block_uuid=$(carburator-commander address register-block "$ipv6_block" \
+			address_block_uuid=$(carburator-rule address register-block "$ipv6_block" \
 				--uuid \
 				--grab \
-				--grab-ip "$ipv6" \
-				--can-exist) || exit 120
+				--grab-ip "$ipv6") || exit 120
 
 			# Point address to node.
-			carburator-commander node address \
+			carburator-rule node address \
 				--node-uuid "$node_uuid" \
 				--address-uuid "$address_block_uuid" || exit 120
 		fi
