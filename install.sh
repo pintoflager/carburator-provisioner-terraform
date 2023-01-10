@@ -17,7 +17,7 @@ arch="$(uname -m)"
 
 if [ "$arch" = "x86_64" ]; then
   arch="amd64"
-elif [ "$arch" = "armv7l" ]; then
+elif [ "$arch" = "armv7" ]; then
   arch="arm"
 elif [ "$arch" = "aarch64" ]; then
   arch="arm64"
