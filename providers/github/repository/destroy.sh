@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-resource="project"
+resource="repository"
 resource_dir="$PROVISIONER_PROVIDER_PATH/.tf-$resource"
 output="$PROVISIONER_PROVIDER_PATH/$resource.json"
 
@@ -18,10 +18,9 @@ fi
 export TF_DATA_DIR="$PROVISIONER_HOME/.terraform"
 export TF_PLUGIN_CACHE_DIR="$PROVISIONER_HOME/.terraform"
 
-export TF_VAR_apitoken="$token"
-export TF_VAR_keyname="${PROJECT_IDENTIFIER}-root"
-export TF_VAR_pubkey="$SSHKEY_ROOT_PUBLIC"
-export TF_VAR_identifier="$PROJECT_IDENTIFIER"
+export TF_VAR_access_token="$token"
+export TF_VAR_name="$PROJECT_IDENTIFIER"
+export TF_VAR_description=""
 
 provisioner_call() {
 	terraform -chdir="$1" init || return 1
@@ -34,7 +33,7 @@ if provisioner_call "$resource_dir"; then
 	rm -rf "$resource_dir"
 	rm -f "$output"
 
-	carburator print terminal success "Project destroyed from service provider Hetzner"
+	carburator print terminal success "Repository destroyed from git provider Github"
 else
 	exit 110
 fi
