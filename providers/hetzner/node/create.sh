@@ -41,8 +41,9 @@ if [[ -z $token || $exitcode -gt 0 ]]; then
 	exit 120
 fi
 
-sshkey_id=$(carburator get env "${PROVIDER_NAME}_ROOT_SSHKEY_ID" \
-	--provisioner terraform); exitcode=$?
+project_output="$PROVISIONER_PROVIDER_PATH/project.json"
+sshkey_id=$(carburator get json project.value.sshkey_id string \
+	-p "$project_output"); exitcode=$?
 
 if [[ -z $sshkey_id || $exitcode -gt 0 ]]; then
 	carburator print terminal error \

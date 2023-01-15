@@ -6,4 +6,3 @@ platforms = ["Commander"]
 providers = ["ServiceProvider"]
 retry_times = 3
 retry_interval = 10
-boot_wait = 15

@@ -18,7 +18,7 @@ provider "hcloud" {
 }
 
 # Upload project root user's public SSH key
-resource "hcloud_ssh_key" "project_ssh" {
+resource "hcloud_ssh_key" "root_ssh" {
   name       = var.keyname
   public_key = file("${var.pubkey}")
 }
