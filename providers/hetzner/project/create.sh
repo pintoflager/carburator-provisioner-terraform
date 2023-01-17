@@ -49,20 +49,30 @@ export TF_VAR_pubkey="$SSHKEY_ROOT_PUBLIC"
 export TF_VAR_identifier="$PROJECT_IDENTIFIER"
 
 provisioner_call() {
-	terraform -chdir="$1" init || return 110
-	terraform -chdir="$1" apply -auto-approve || return 110
-	terraform -chdir="$1" output -json > "$2" || return 110
+	terraform -chdir="$1" init
+	terraform -chdir="$1" apply -auto-approve
+	terraform -chdir="$1" output -json > "$2"
 
 	# Assuming terraform failed as output doesn't have what was expected.
 	local id;
 	id=$(carburator get json project.value.sshkey_id string --path "$2")
 
 	if [[ -z $id ]]; then
-		rm -f "$2"; exit 110
+		rm -f "$2"; return 110
 	fi
 }
 
 # Analyze output json to determine if project was registered OK.
-if provisioner_call "$resource_dir" "$output"; then
+provisioner_call "$resource_dir" "$output"; exitcode=$?
+
+if [[ $exitcode -eq 0 ]]; then
 	carburator print terminal success "Terraform provisioner terminated successfully"
+elif [[ $exitcode -eq 110 ]]; then
+	carburator print terminal error \
+		"Terraform provisioner failed with exitcode $exitcode, allow retry..."
+	exit 110
+else
+	carburator print terminal error \
+		"Terraform provisioner failed with exitcode $exitcode"
+	exit 120
 fi

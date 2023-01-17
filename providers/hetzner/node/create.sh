@@ -66,19 +66,20 @@ export TF_VAR_nodes="$nodes"
 
 
 provisioner_call() {
-	terraform -chdir="$1" init || return 1
-	terraform -chdir="$1" apply -auto-approve || return 1
-	terraform -chdir="$1" output -json > "$2" || return 1
+	terraform -chdir="$1" init
+	terraform -chdir="$1" apply -auto-approve
+	terraform -chdir="$1" output -json > "$2"
 
 	# Assuming create failed as we cant load the output
 	if ! carburator has json node.value --path "$2"; then
 		carburator print terminal error "Create nodes failed."
-		rm -f "$2"; return 1
+		rm -f "$2"; return 110
 	fi
 }
 
-# Analyze output json to determine if nodes were registered OK.
-if provisioner_call "$resource_dir" "$output"; then
+provisioner_call "$resource_dir" "$output"; exitcode=$?
+
+if [[ $exitcode -eq 0 ]]; then
 	carburator print terminal success "Create nodes succeeded."
 	carburator print terminal info "Extracting IP address blocks..."
 
@@ -131,7 +132,12 @@ if provisioner_call "$resource_dir" "$output"; then
 				--address-uuid "$address_block_uuid" || exit 120
 		fi
 	done
-
-else
+elif [[ $exitcode -eq 110 ]]; then
+	carburator print terminal error \
+		"Terraform provisioner failed with exitcode $exitcode, allow retry..."
 	exit 110
+else
+	carburator print terminal error \
+		"Terraform provisioner failed with exitcode $exitcode"
+	exit 120
 fi

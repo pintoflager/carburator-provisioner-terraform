@@ -47,14 +47,14 @@ nodes=$(carburator get json node.value array-raw \
 export TF_VAR_nodes="$nodes"
 
 provisioner_call() {
-	terraform -chdir="$1" init || return 1
-	terraform -chdir="$1" apply -auto-approve || return 1
-	terraform -chdir="$1" output -json > "$2" || return 1
+	terraform -chdir="$1" init
+	terraform -chdir="$1" apply -auto-approve
+	terraform -chdir="$1" output -json > "$2"
 
 	# Assuming create failed as we cant load the output
 	if ! carburator has json network.value --path "$2"; then
 		carburator print terminal error "Create networks failed."
-		rm -f "$2"; return 1
+		rm -f "$2"; return 110
 	fi
 }
 
@@ -65,7 +65,9 @@ if [[ -e "$PROVISIONER_PROVIDER_PATH/$resource/.eu.nodes.json" ]]; then
 	export TF_VAR_networks="$network_json"
 
 	# Analyze output json to determine if networks were registered OK.
-	if provisioner_call "$resource_dir" "$output"; then
+	provisioner_call "$resource_dir" "$output"; exitcode=$?
+
+	if [[ $exitcode -eq 0 ]]; then
 		carburator print terminal success "Europe central networks created."	
 	else
 		exit 110
@@ -77,7 +79,9 @@ if [[ -e "$PROVISIONER_PROVIDER_PATH/$resource/.us.east.nodes.json" ]]; then
 	export TF_VAR_networks="$network_json"
 
 	# Analyze output json to determine if networks were registered OK.
-	if provisioner_call "$resource_dir" "$output"; then
+	provisioner_call "$resource_dir" "$output"; exitcode=$?
+
+	if [[ $exitcode -eq 0 ]]; then
 		carburator print terminal success "USA east networks created."
 	else
 		exit 110
@@ -89,7 +93,9 @@ if [[ -e "$PROVISIONER_PROVIDER_PATH/$resource/.us.west.nodes.json" ]]; then
 	export TF_VAR_networks="$network_json"
 
 	# Analyze output json to determine if networks were registered OK.
-	if provisioner_call "$resource_dir" "$output"; then
+	provisioner_call "$resource_dir" "$output"; exitcode=$?
+
+	if [[ $exitcode -eq 0 ]]; then
 		carburator print terminal success "USA west networks created."	
 	else
 		exit 110
