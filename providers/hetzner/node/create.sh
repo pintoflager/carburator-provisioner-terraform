@@ -133,6 +133,8 @@ if [[ $exitcode -eq 0 ]]; then
 				--address-uuid "$address_block_uuid" || exit 120
 		fi
 	done
+
+	carburator print terminal success "IP address blocks registered."
 elif [[ $exitcode -eq 110 ]]; then
 	carburator print terminal error \
 		"Terraform provisioner failed with exitcode $exitcode, allow retry..."
