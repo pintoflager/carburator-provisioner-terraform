@@ -81,9 +81,10 @@ provisioner_call "$resource_dir" "$output"; exitcode=$?
 
 if [[ $exitcode -eq 0 ]]; then
 	carburator print terminal success "Create nodes succeeded."
+	
+	# Register IP address blocks and addresses
 	carburator print terminal info "Extracting IP address blocks..."
 
-	# Register IP address blocks and addresses
 	len=$(carburator get json node.value array --path "$output" | wc -l)
 	for (( i=0; i<len; i++ )); do
 		# Easiest way to find the right node is with it's UUID
