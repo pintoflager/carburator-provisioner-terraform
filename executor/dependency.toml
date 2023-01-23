@@ -1,0 +1,8 @@
+[[dependent]]
+name = "bash"
+optional = false
+level = "node"
+platforms = ["commander"]
+# version = Option<VersionReq>,
+# optional_with = Vec<String>,
+
