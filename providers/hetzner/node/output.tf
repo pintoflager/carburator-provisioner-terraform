@@ -2,7 +2,7 @@
 # Principal output for nodes.
 #
 output "node" {
-  description = "Server details for ansible."
+  description = "Server node registration output"
   value = [
     for i, v in hcloud_server.servers: ({
       name                = v.name

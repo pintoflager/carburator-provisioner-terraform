@@ -44,6 +44,7 @@ resource "hcloud_server" "servers" {
   ssh_keys = [var.ssh_id]
   placement_group_id = hcloud_placement_group.__server_placement.id
   labels = {
-    "uuid" : "${var.nodes[count.index].uuid}"
+    "uuid" : "${var.nodes[count.index].uuid}",
+    "proxy" : "${var.nodes[count.index].proxy}"
   }
 }
