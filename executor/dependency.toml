@@ -1,7 +1,0 @@
-[[dependent]]
-name = "bash"
-optional = false
-level = "Commander"
-# version = Option<VersionReq>,
-# optional_with = Vec<String>,
-

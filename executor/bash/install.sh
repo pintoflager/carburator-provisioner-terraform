@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# ATTENTION: Runs only on commander, pointless to read platform from $1
+
 # Terraform is required.
 if carburator fn integration-installed terraform; then
   carburator print terminal info "Terraform found, skipping install..."
