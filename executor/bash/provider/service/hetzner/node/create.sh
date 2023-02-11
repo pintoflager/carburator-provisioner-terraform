@@ -53,15 +53,32 @@ fi
 
 export TF_VAR_hcloud_token="$token"
 export TF_VAR_ssh_id="$sshkey_id"
+export TF_VAR_project_id="$PROJECT_IDENTIFIER"
 export TF_DATA_DIR="$PROVISIONER_HOME/.terraform"
 export TF_PLUGIN_CACHE_DIR="$PROVISIONER_HOME/.terraform"
 
+# Set node group name for server placement group
 node_group=$(carburator get json node_group_name string \
 	--path "$PROVISIONER_PROVIDER_PATH/$resource/.provider.exec.json")
+
+if [[ -z $node_group ]]; then
+	carburator print terminal error \
+		"Could not load node group name from .provider.exec.json"
+	exit 120
+fi
+
 export TF_VAR_node_group="$node_group"
 
+# Set nodes array as servers config source.
 nodes=$(carburator get json nodes array-raw \
 	--path "$PROVISIONER_PROVIDER_PATH/$resource/.provider.exec.json")
+
+if [[ -z $nodes ]]; then
+	carburator print terminal error \
+		"Could not load nodes array from .provider.exec.json"
+	exit 120
+fi
+
 export TF_VAR_nodes="$nodes"
 
 
@@ -73,7 +90,7 @@ provisioner_call() {
 	# Assuming create failed as we cant load the output
 	if ! carburator has json node.value --path "$2"; then
 		carburator print terminal error "Create nodes failed."
-		rm -f "$2"; return 110
+		return 110
 	fi
 }
 

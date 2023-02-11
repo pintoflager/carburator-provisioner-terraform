@@ -34,6 +34,7 @@ fi
 
 export TF_VAR_hcloud_token="$token"
 export TF_VAR_ssh_id="$sshkey_id"
+export TF_VAR_project_id="$PROJECT_IDENTIFIER"
 export TF_DATA_DIR="$PROVISIONER_HOME/.terraform"
 export TF_PLUGIN_CACHE_DIR="$PROVISIONER_HOME/.terraform"
 

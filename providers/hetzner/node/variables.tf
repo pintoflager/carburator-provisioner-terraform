@@ -15,6 +15,10 @@ variable "node_group" {
   type = string
 }
 
+variable "project_id" {
+  type = string
+}
+
 variable "nodes" {
   type = list(
     object({

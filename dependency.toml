@@ -4,7 +4,7 @@
 # on_level: DepOnLevel,
 # collection: PackageType,
 
-[[dependency.bash]]
+[dependency.bash]
 optional = false
-level = "Commander"
+on_level = "Commander"
 collection = "Executor"

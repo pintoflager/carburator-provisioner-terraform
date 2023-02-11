@@ -23,8 +23,8 @@ provider "hcloud" {
 ###
 # Server placement.
 #
-resource "hcloud_placement_group" "__server_placement" {
-  name = "${var.node_group}-placement"
+resource "hcloud_placement_group" "server_placement" {
+  name = "${var.project_id}-${var.node_group}-placement"
   type = "spread"
 }
 
@@ -42,9 +42,9 @@ resource "hcloud_server" "servers" {
     ipv6_enabled = var.nodes[count.index].connectivity.ipv6
   }
   ssh_keys = [var.ssh_id]
-  placement_group_id = hcloud_placement_group.__server_placement.id
+  placement_group_id = hcloud_placement_group.server_placement.id
   labels = {
     "uuid" : "${var.nodes[count.index].uuid}",
-    "proxy" : "${var.nodes[count.index].proxy}"
+    "proxy" : var.nodes[count.index].proxy ? "true" : "false"
   }
 }

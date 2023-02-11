@@ -21,7 +21,7 @@ output "node" {
 output "server_placement" {
   description = "Placement group for the cluster servers"
   value       = {
-    name   = hcloud_placement_group.__server_placement.name
-    id     = hcloud_placement_group.__server_placement.id
+    name   = hcloud_placement_group.server_placement.name
+    id     = hcloud_placement_group.server_placement.id
   }
 }
