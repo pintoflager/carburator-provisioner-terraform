@@ -1,7 +1,7 @@
 name = "terraform"
 version = "0.1.0"
 collection = "Provisioner"
-platforms = ["Commander"]
+platforms = ["Client", "Commander"]
 
 providers = ["ServiceProvider"]
 retry_times = 3

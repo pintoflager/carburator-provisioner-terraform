@@ -134,11 +134,11 @@ for (( i=0; i<len; i++ )); do
 		node_uuid=$(carburator get json "node.value.$i.labels.uuid" string \
 			-p "$PROVISIONER_PROVIDER_PATH/node.json")
 
-		# Register block and grab first (and only) ip from it.
+		# Register block and extract first (and the only) ip from it.
 		net_uuid=$(carburator-rule address register-block "$network_range" \
-			--grab \
-			--uuid \
-			--grab-ip "$ip") || exit 120
+			--extract \
+			--ip "$ip" \
+			--uuid) || exit 120
 
 		# Point address to node.
 		carburator-rule node address \

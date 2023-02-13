@@ -115,11 +115,11 @@ if [[ $exitcode -eq 0 ]]; then
 		# reminder how to use the --cidr flag.
 		ipv4=$(carburator get json "node.value.$i.ipv4" string -p "$output")
 
-		# Register block and grab first (and only) ip from it.
+		# Register block and extract first (and the only) ip from it.
 		if [[ -n $ipv4 && $ipv4 != null ]]; then
 			address_block_uuid=$(carburator-rule address register-block "$ipv4" \
-				--grab \
-				--grab-ip "$ipv4" \
+				--extract \
+				--ip "$ipv4" \
 				--uuid \
 				--cidr 32) || exit 120
 
@@ -141,8 +141,8 @@ if [[ $exitcode -eq 0 ]]; then
 			# register-block value has /cidr.
 			address_block_uuid=$(carburator-rule address register-block "$ipv6_block" \
 				--uuid \
-				--grab \
-				--grab-ip "$ipv6") || exit 120
+				--extract \
+				--ip "$ipv6") || exit 120
 
 			# Point address to node.
 			carburator-rule node address \
