@@ -34,7 +34,7 @@ variable "nodes" {
       location = object({
         name = string
       })
-      connectivity = object({
+      toggles = object({
         ipv4 = bool
         ipv6 = bool
       })

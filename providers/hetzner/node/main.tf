@@ -38,8 +38,8 @@ resource "hcloud_server" "servers" {
   server_type = "${var.nodes[count.index].plan.name}"
   location    = "${var.nodes[count.index].location.name}"
   public_net {
-    ipv4_enabled = var.nodes[count.index].connectivity.ipv4
-    ipv6_enabled = var.nodes[count.index].connectivity.ipv6
+    ipv4_enabled = var.nodes[count.index].toggles.ipv4
+    ipv6_enabled = var.nodes[count.index].toggles.ipv6
   }
   ssh_keys = [var.ssh_id]
   placement_group_id = hcloud_placement_group.server_placement.id
