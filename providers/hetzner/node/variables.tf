@@ -24,7 +24,6 @@ variable "nodes" {
     object({
       hostname = string
       uuid = string
-      proxy = bool
       os = object({
         name = string
       })
