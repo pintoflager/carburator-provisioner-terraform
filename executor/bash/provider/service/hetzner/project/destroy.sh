@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 resource="project"
-resource_dir="$PROVISIONER_PROVIDER_PATH/.tf-$resource"
-output="$PROVISIONER_PROVIDER_PATH/$resource.json"
+resource_dir="$PROVISIONER_SERVICE_PROVIDER_PATH/.tf-$resource"
+output="$PROVISIONER_SERVICE_PROVIDER_PATH/$resource.json"
 
 ###
 # Get API token from secrets or bail early.
@@ -15,8 +15,8 @@ if [[ -z $token || $exitcode -gt 0 ]]; then
 	exit 120
 fi
 
-export TF_DATA_DIR="$PROVISIONER_HOME/.terraform"
-export TF_PLUGIN_CACHE_DIR="$PROVISIONER_HOME/.terraform"
+export TF_DATA_DIR="$PROVISIONER_PATH/.terraform"
+export TF_PLUGIN_CACHE_DIR="$PROVISIONER_PATH/.terraform"
 
 export TF_VAR_apitoken="$token"
 export TF_VAR_keyname="${PROJECT_IDENTIFIER}-root"

@@ -16,18 +16,18 @@ carburator print terminal info "Invoking Terraform project provisioner..."
 # Registers project with hetzner and adds ssh key for project root.
 #
 resource="project"
-resource_dir="$PROVISIONER_PROVIDER_PATH/.tf-$resource"
-output="$PROVISIONER_PROVIDER_PATH/$resource.json"
+resource_dir="$PROVISIONER_SERVICE_PROVIDER_PATH/.tf-$resource"
+output="$PROVISIONER_SERVICE_PROVIDER_PATH/$resource.json"
 
 # Make sure terraform directories exist.
-mkdir -p "$PROVISIONER_HOME/.terraform" "$resource_dir"
+mkdir -p "$PROVISIONER_PATH/.terraform" "$resource_dir"
 
 # Copy terraform configuration files to .tf-project dir (don't overwrite)
 # These files can be modified without risk of unwarned overwrite.
 while read -r tf_file; do
 	file=$(basename "$tf_file")
-	cp -n "$tf_file" "$PROVISIONER_PROVIDER_PATH/.tf-$resource/$file"
-done < <(find "$PROVISIONER_PROVIDER_PATH/$resource" -maxdepth 1 -iname '*.tf')
+	cp -n "$tf_file" "$PROVISIONER_SERVICE_PROVIDER_PATH/.tf-$resource/$file"
+done < <(find "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource" -maxdepth 1 -iname '*.tf')
 
 ###
 # Get API token from secrets or bail early.
@@ -40,8 +40,8 @@ if [[ -z $token || $exitcode -gt 0 ]]; then
 	exit 120
 fi
 
-export TF_DATA_DIR="$PROVISIONER_HOME/.terraform"
-export TF_PLUGIN_CACHE_DIR="$PROVISIONER_HOME/.terraform"
+export TF_DATA_DIR="$PROVISIONER_PATH/.terraform"
+export TF_PLUGIN_CACHE_DIR="$PROVISIONER_PATH/.terraform"
 
 export TF_VAR_apitoken="$token"
 export TF_VAR_keyname="${PROJECT_IDENTIFIER}-root"

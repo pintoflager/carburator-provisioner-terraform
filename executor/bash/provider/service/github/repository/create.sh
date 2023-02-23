@@ -8,23 +8,23 @@ carburator print terminal info "Invoking Terraform github repository provisioner
 # Creates repository to the managed github account.
 #
 resource="repository"
-resource_dir="$PROVISIONER_PROVIDER_PATH/.tf-$resource"
-output="$PROVISIONER_PROVIDER_PATH/$resource.json"
+resource_dir="$PROVISIONER_SERVICE_PROVIDER_PATH/.tf-$resource"
+output="$PROVISIONER_SERVICE_PROVIDER_PATH/$resource.json"
 
 # Make sure terraform directories exist.
-mkdir -p "$PROVISIONER_HOME/.terraform" "$resource_dir"
+mkdir -p "$PROVISIONER_PATH/.terraform" "$resource_dir"
 
 # Copy terraform configuration files to .tf-repository dir (don't overwrite)
 # These files can be modified without risk of unwarned overwrite.
 while read -r tf_file; do
 	file=$(basename "$tf_file")
-	cp -n "$tf_file" "$PROVISIONER_PROVIDER_PATH/.tf-$resource/$file"
-done < <(find "$PROVISIONER_PROVIDER_PATH/$resource" -maxdepth 1 -iname '*.tf')
+	cp -n "$tf_file" "$PROVISIONER_SERVICE_PROVIDER_PATH/.tf-$resource/$file"
+done < <(find "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource" -maxdepth 1 -iname '*.tf')
 
 ###
 # Get API token from secrets or bail early.
 #
-token=$(carburator get secret "$PROVIDER_SECRET_0" --user root); exitcode=$?
+token=$(carburator get secret "$PROVISIONER_SERVICE_PROVIDER_SECRET_0" --user root); exitcode=$?
 
 if [[ -z $token || $exitcode -gt 0 ]]; then
 	carburator print terminal error \
@@ -35,8 +35,8 @@ fi
 # TODO: private / public var
 export TF_VAR_visibility="TODO"
 
-export TF_DATA_DIR="$PROVISIONER_HOME/.terraform"
-export TF_PLUGIN_CACHE_DIR="$PROVISIONER_HOME/.terraform"
+export TF_DATA_DIR="$PROVISIONER_PATH/.terraform"
+export TF_PLUGIN_CACHE_DIR="$PROVISIONER_PATH/.terraform"
 
 export TF_VAR_access_token="$token"
 export TF_VAR_name="$PROJECT_IDENTIFIER"
@@ -60,7 +60,7 @@ provisioner_call() {
 # Analyze output json to determine if repository was registered OK.
 if provisioner_call "$resource_dir" "$output"; then
 	# Save repository urls to project repo toml.
-	repo_path="$PROJECT_PATH/repositories"
+	repo_path="$PROJECT_PUBLIC/repositories"
 	repo_toml="$repo_path/$PROJECT_IDENTIFIER.toml"
 
 	# Get and put

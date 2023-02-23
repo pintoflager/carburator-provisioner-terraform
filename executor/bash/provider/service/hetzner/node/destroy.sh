@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 
 resource="node"
-resource_dir="$PROVISIONER_PROVIDER_PATH/.tf-$resource"
-output="$PROVISIONER_PROVIDER_PATH/$resource.json"
+resource_dir="$PROVISIONER_SERVICE_PROVIDER_PATH/.tf-$resource"
+output="$PROVISIONER_SERVICE_PROVIDER_PATH/$resource.json"
 
 # Make sure terraform resource dir exist.
 mkdir -p "$resource_dir"
 
 while read -r tf_file; do
 	file=$(basename "$tf_file")
-	cp -n "$tf_file" "$PROVISIONER_PROVIDER_PATH/.tf-$resource/$file"
-done < <(find "$PROVISIONER_PROVIDER_PATH/$resource" -maxdepth 1 -iname '*.tf')
+	cp -n "$tf_file" "$PROVISIONER_SERVICE_PROVIDER_PATH/.tf-$resource/$file"
+done < <(find "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource" -maxdepth 1 -iname '*.tf')
 
 ###
 # Get API token from secrets or bail early.
@@ -35,15 +35,15 @@ fi
 export TF_VAR_hcloud_token="$token"
 export TF_VAR_ssh_id="$sshkey_id"
 export TF_VAR_project_id="$PROJECT_IDENTIFIER"
-export TF_DATA_DIR="$PROVISIONER_HOME/.terraform"
-export TF_PLUGIN_CACHE_DIR="$PROVISIONER_HOME/.terraform"
+export TF_DATA_DIR="$PROVISIONER_PATH/.terraform"
+export TF_PLUGIN_CACHE_DIR="$PROVISIONER_PATH/.terraform"
 
 node_group=$(carburator get json node_group_name string \
-	--path "$PROVISIONER_PROVIDER_PATH/$resource/.provider.exec.json")
+	--path "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource/.provider.exec.json")
 export TF_VAR_node_group="$node_group"
 
 nodes=$(carburator get json nodes array-raw \
-	--path "$PROVISIONER_PROVIDER_PATH/$resource/.provider.exec.json")
+	--path "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource/.provider.exec.json")
 export TF_VAR_nodes="$nodes"
 
 provisioner_call() {

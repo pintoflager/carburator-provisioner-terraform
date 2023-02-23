@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
 resource="network"
-resource_dir="$PROVISIONER_PROVIDER_PATH/.tf-$resource"
-output="$PROVISIONER_PROVIDER_PATH/$resource.json"
+resource_dir="$PROVISIONER_SERVICE_PROVIDER_PATH/.tf-$resource"
+output="$PROVISIONER_SERVICE_PROVIDER_PATH/$resource.json"
 
 while read -r tf_file; do
 	file=$(basename "$tf_file")
-	cp -n "$tf_file" "$PROVISIONER_PROVIDER_PATH/.tf-$resource/$file"
-done < <(find "$PROVISIONER_PROVIDER_PATH/$resource" -maxdepth 1 -iname '*.tf')
+	cp -n "$tf_file" "$PROVISIONER_SERVICE_PROVIDER_PATH/.tf-$resource/$file"
+done < <(find "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource" -maxdepth 1 -iname '*.tf')
 
 ###
 # Get API token from secrets or bail out early.
@@ -21,12 +21,12 @@ if [[ -z $token || $exitcode -gt 0 ]]; then
 fi
 
 export TF_VAR_hcloud_token="$token"
-export TF_DATA_DIR="$PROVISIONER_HOME/.terraform"
-export TF_PLUGIN_CACHE_DIR="$PROVISIONER_HOME/.terraform"
+export TF_DATA_DIR="$PROVISIONER_PATH/.terraform"
+export TF_PLUGIN_CACHE_DIR="$PROVISIONER_PATH/.terraform"
 
 # We only connect nodes provisioned with terraform.
 nodes=$(carburator get json node.value array-raw \
-	--path "$PROVISIONER_PROVIDER_PATH/node.json")
+	--path "$PROVISIONER_SERVICE_PROVIDER_PATH/node.json")
 export TF_VAR_nodes="$nodes"
 
 provisioner_call() {
@@ -36,8 +36,8 @@ provisioner_call() {
 
 # Network setup is expected to come from service provider with each network
 # zone separately
-if [[ -e "$PROVISIONER_PROVIDER_PATH/$resource/.eu.nodes.json" ]]; then
-	network_json=$(cat "$PROVISIONER_PROVIDER_PATH/$resource/.eu.nodes.json")
+if [[ -e "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource/.eu.nodes.json" ]]; then
+	network_json=$(cat "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource/.eu.nodes.json")
 	export TF_VAR_networks="$network_json"
 
 	if provisioner_call "$resource_dir"; then
@@ -47,8 +47,8 @@ if [[ -e "$PROVISIONER_PROVIDER_PATH/$resource/.eu.nodes.json" ]]; then
 	fi
 fi
 
-if [[ -e "$PROVISIONER_PROVIDER_PATH/$resource/.us.east.nodes.json" ]]; then
-	network_json=$(cat "$PROVISIONER_PROVIDER_PATH/$resource/.us.east.nodes.json")
+if [[ -e "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource/.us.east.nodes.json" ]]; then
+	network_json=$(cat "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource/.us.east.nodes.json")
 	export TF_VAR_networks="$network_json"
 
 	if provisioner_call "$resource_dir"; then
@@ -58,8 +58,8 @@ if [[ -e "$PROVISIONER_PROVIDER_PATH/$resource/.us.east.nodes.json" ]]; then
 	fi
 fi
 
-if [[ -e "$PROVISIONER_PROVIDER_PATH/$resource/.us.west.nodes.json" ]]; then
-	network_json=$(cat "$PROVISIONER_PROVIDER_PATH/$resource/.us.east.west.json")
+if [[ -e "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource/.us.west.nodes.json" ]]; then
+	network_json=$(cat "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource/.us.east.west.json")
 	export TF_VAR_networks="$network_json"
 
 	if provisioner_call "$resource_dir"; then
