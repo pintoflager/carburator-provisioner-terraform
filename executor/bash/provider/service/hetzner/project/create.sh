@@ -1,23 +1,14 @@
 #!/usr/bin/env bash
 
-# ATTENTION: Scripts run from carburator project's public root directory:
-# echo "$PWD"
-
-# ATTENTION: to check the environment variables uncomment:
-# env
-
-# ATTENTION: Default exit codes for informing carburator's script runner:
-# exitcode_can_retry = 110
-# exitcode_unrecoverable = 120
-
 carburator print terminal info "Invoking Terraform project provisioner..."
 
 ###
 # Registers project with hetzner and adds ssh key for project root.
 #
 resource="project"
-resource_dir="$PROVISIONER_SERVICE_PROVIDER_PATH/.tf-$resource"
-output="$PROVISIONER_SERVICE_PROVIDER_PATH/$resource.json"
+resource_dir="$INVOCATION_PATH/terraform"
+terraform_templates="$PROVISIONER_PATH/providers/hetzner/$resource"
+output="$INVOCATION_BASE/$resource.json"
 
 # Make sure terraform directories exist.
 mkdir -p "$PROVISIONER_PATH/.terraform" "$resource_dir"
@@ -26,13 +17,14 @@ mkdir -p "$PROVISIONER_PATH/.terraform" "$resource_dir"
 # These files can be modified without risk of unwarned overwrite.
 while read -r tf_file; do
 	file=$(basename "$tf_file")
-	cp -n "$tf_file" "$PROVISIONER_SERVICE_PROVIDER_PATH/.tf-$resource/$file"
-done < <(find "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource" -maxdepth 1 -iname '*.tf')
+	cp -n "$tf_file" "$resource_dir/$file"
+done < <(find "$terraform_templates" -maxdepth 1 -iname '*.tf')
 
 ###
 # Get API token from secrets or bail early.
 #
-token=$(carburator get secret "$PROVIDER_SECRET_0" --user root); exitcode=$?
+token=$(carburator get secret "$PROVISIONER_SERVICE_PROVIDER_SECRET_0" --user root)
+exitcode=$?
 
 if [[ -z $token || $exitcode -gt 0 ]]; then
 	carburator print terminal error \

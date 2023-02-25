@@ -2,38 +2,23 @@
 
 carburator print terminal info "Invoking Hetzner's Terraform server provisioner..."
 
-###
-# Registers project with hetzner and adds ssh key for project root.
-#
-
-# REMEMBER: runtime variables for provisioner are next to this script as:
-# .exec.env << Same as the sourced environment (check with 'env' command)
-# .exec.json
-# .exec.yaml
-# .exec.toml
-
-# REMEMBER: runtime variables for provider are expected to be next to this script as:
-# .provider.exec.env
-# .provider.exec.json
-# .provider.exec.yaml
-# .provider.exec.toml
-
 resource="node"
-resource_dir="$PROVISIONER_SERVICE_PROVIDER_PATH/.tf-$resource"
-output="$PROVISIONER_SERVICE_PROVIDER_PATH/$resource.json"
+resource_dir="$INVOCATION_PATH/terraform"
+terraform_templates="$PROVISIONER_PATH/providers/hetzner/$resource"
+output="$INVOCATION_BASE/$resource.json"
 
 # Make sure terraform resource dir exist.
 mkdir -p "$resource_dir"
 
 while read -r tf_file; do
 	file=$(basename "$tf_file")
-	cp -n "$tf_file" "$PROVISIONER_SERVICE_PROVIDER_PATH/.tf-$resource/$file"
-done < <(find "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource" -maxdepth 1 -iname '*.tf')
+	cp -n "$tf_file" "$resource_dir/$file"
+done < <(find "$terraform_templates" -maxdepth 1 -iname '*.tf')
 
 ###
 # Get API token from secrets or bail early.
 #
-token=$(carburator get secret "$PROVIDER_SECRET_0" --user root); exitcode=$?
+token=$(carburator get secret "$PROVISIONER_SERVICE_PROVIDER_SECRET_0" --user root); exitcode=$?
 
 if [[ -z $token || $exitcode -gt 0 ]]; then
 	carburator print terminal error \
@@ -41,7 +26,7 @@ if [[ -z $token || $exitcode -gt 0 ]]; then
 	exit 120
 fi
 
-project_output="$PROVISIONER_SERVICE_PROVIDER_PATH/project.json"
+project_output="$INVOCATION_BASE/project.json"
 sshkey_id=$(carburator get json project.value.sshkey_id string \
 	-p "$project_output"); exitcode=$?
 
@@ -59,7 +44,7 @@ export TF_PLUGIN_CACHE_DIR="$PROVISIONER_PATH/.terraform"
 
 # Set node group name for server placement group
 node_group=$(carburator get json node_group_name string \
-	--path "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource/.provider.exec.json")
+	--path "$INVOCATION_BASE/$resource/.provider.exec.json")
 
 if [[ -z $node_group ]]; then
 	carburator print terminal error \
@@ -71,7 +56,7 @@ export TF_VAR_node_group="$node_group"
 
 # Set nodes array as servers config source.
 nodes=$(carburator get json nodes array-raw \
-	--path "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource/.provider.exec.json")
+	--path "$INVOCATION_BASE/$resource/.provider.exec.json")
 
 if [[ -z $nodes ]]; then
 	carburator print terminal error \

@@ -2,34 +2,23 @@
 
 carburator print terminal info "Invoking Hetzner's Terraform network provisioner..."
 
-# REMEMBER: runtime variables for provisioner are next to this script as:
-# .exec.env << Same as the sourced environment (check with 'env' command)
-# .exec.json
-# .exec.yaml
-# .exec.toml
-
-# REMEMBER: runtime variables for provider are expected to be next to this script as:
-# .provider.exec.env
-# .provider.exec.json
-# .provider.exec.yaml
-# .provider.exec.toml
-
 resource="network"
-resource_dir="$PROVISIONER_SERVICE_PROVIDER_PATH/.tf-$resource"
-output="$PROVISIONER_SERVICE_PROVIDER_PATH/$resource.json"
+resource_dir="$INVOCATION_PATH/terraform"
+terraform_templates="$PROVISIONER_PATH/providers/hetzner/$resource"
+output="$INVOCATION_BASE/$resource.json"
 
 # Make sure terraform resource dir exist.
 mkdir -p "$resource_dir"
 
 while read -r tf_file; do
 	file=$(basename "$tf_file")
-	cp -n "$tf_file" "$PROVISIONER_SERVICE_PROVIDER_PATH/.tf-$resource/$file"
-done < <(find "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource" -maxdepth 1 -iname '*.tf')
+	cp -n "$tf_file" "$resource_dir/$file"
+done < <(find "$terraform_templates" -maxdepth 1 -iname '*.tf')
 
 ###
 # Get API token from secrets or bail out early.
 #
-token=$(carburator get secret "$PROVIDER_SECRET_0" --user root); exitcode=$?
+token=$(carburator get secret "$PROVISIONER_SERVICE_PROVIDER_SECRET_0" --user root); exitcode=$?
 
 if [[ -z $token || $exitcode -gt 0 ]]; then
 	carburator print terminal error \
@@ -43,7 +32,7 @@ export TF_PLUGIN_CACHE_DIR="$PROVISIONER_PATH/.terraform"
 
 # We only connect nodes provisioned with terraform.
 nodes=$(carburator get json node.value array-raw \
-	--path "$PROVISIONER_SERVICE_PROVIDER_PATH/node.json")
+	--path "$INVOCATION_BASE/node.json")
 export TF_VAR_nodes="$nodes"
 
 provisioner_call() {
@@ -60,8 +49,8 @@ provisioner_call() {
 
 # Network setup is expected to come from service provider with each network
 # zone separately
-if [[ -e "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource/.eu.nodes.json" ]]; then
-	network_json=$(cat "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource/.eu.nodes.json")
+if [[ -e "$INVOCATION_BASE/$resource/.eu.nodes.json" ]]; then
+	network_json=$(cat "$INVOCATION_BASE/$resource/.eu.nodes.json")
 	export TF_VAR_networks="$network_json"
 
 	# Analyze output json to determine if networks were registered OK.
@@ -74,8 +63,8 @@ if [[ -e "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource/.eu.nodes.json" ]]; then
 	fi
 fi
 
-if [[ -e "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource/.us.east.nodes.json" ]]; then
-	network_json=$(cat "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource/.us.east.nodes.json")
+if [[ -e "$INVOCATION_BASE/$resource/.us.east.nodes.json" ]]; then
+	network_json=$(cat "$INVOCATION_BASE/$resource/.us.east.nodes.json")
 	export TF_VAR_networks="$network_json"
 
 	# Analyze output json to determine if networks were registered OK.
@@ -88,8 +77,8 @@ if [[ -e "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource/.us.east.nodes.json" ]]; 
 	fi
 fi
 
-if [[ -e "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource/.us.west.nodes.json" ]]; then
-	network_json=$(cat "$PROVISIONER_SERVICE_PROVIDER_PATH/$resource/.us.east.west.json")
+if [[ -e "$INVOCATION_BASE/$resource/.us.west.nodes.json" ]]; then
+	network_json=$(cat "$INVOCATION_BASE/$resource/.us.east.west.json")
 	export TF_VAR_networks="$network_json"
 
 	# Analyze output json to determine if networks were registered OK.
@@ -106,7 +95,7 @@ fi
 len=$(carburator get json node.value array --path "$output" | wc -l)
 network_range=$(carburator get json "network.value.ip_range" string -p "$output")
 nlen=$(carburator get json node.value array \
-	-p "$PROVISIONER_SERVICE_PROVIDER_PATH/node.json" | wc -l)
+	-p "$INVOCATION_BASE/node.json" | wc -l)
 
 # Loop all nodes attached to private network.
 for (( i=0; i<len; i++ )); do
@@ -125,14 +114,14 @@ for (( i=0; i<len; i++ )); do
 	# Loop all nodes from node.json, find node uuid, add block and address.
 	for (( j=0; j<nlen; j++ )); do
 		node_id=$(carburator get json "node.value.$i.id" string \
-			-p "$PROVISIONER_SERVICE_PROVIDER_PATH/node.json")
+			-p "$INVOCATION_BASE/node.json")
 
 		# Not what we're looking for.
 		if [[ $node_id != "$id" ]]; then continue; fi
 
 		# Easiest way to find the right node is with it's UUID
 		node_uuid=$(carburator get json "node.value.$i.labels.uuid" string \
-			-p "$PROVISIONER_SERVICE_PROVIDER_PATH/node.json")
+			-p "$INVOCATION_BASE/node.json")
 
 		# Register block and extract first (and the only) ip from it.
 		net_uuid=$(carburator-rule address register-block "$network_range" \
