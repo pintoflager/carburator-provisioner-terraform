@@ -2,6 +2,7 @@
 
 resource="node"
 resource_dir="$INVOCATION_PATH/terraform"
+terraform_resources="$PROVISIONER_PATH/providers/hetzner/$resource"
 output="$INVOCATION_BASE/$resource.json"
 
 # Make sure terraform resource dir exist.
@@ -34,11 +35,11 @@ export TF_DATA_DIR="$PROVISIONER_PATH/.terraform"
 export TF_PLUGIN_CACHE_DIR="$PROVISIONER_PATH/.terraform"
 
 node_group=$(carburator get json node_group_name string \
-	--path "$INVOCATION_BASE/$resource/.provider.exec.json")
+	--path "$terraform_resources/.provider.exec.json")
 export TF_VAR_node_group="$node_group"
 
 nodes=$(carburator get json nodes array-raw \
-	--path "$INVOCATION_BASE/$resource/.provider.exec.json")
+	--path "$terraform_resources/.provider.exec.json")
 export TF_VAR_nodes="$nodes"
 
 provisioner_call() {

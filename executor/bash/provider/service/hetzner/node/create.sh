@@ -4,7 +4,7 @@ carburator print terminal info "Invoking Hetzner's Terraform server provisioner.
 
 resource="node"
 resource_dir="$INVOCATION_PATH/terraform"
-terraform_templates="$PROVISIONER_PATH/providers/hetzner/$resource"
+terraform_resources="$PROVISIONER_PATH/providers/hetzner/$resource"
 output="$INVOCATION_BASE/$resource.json"
 
 # Make sure terraform resource dir exist.
@@ -13,7 +13,7 @@ mkdir -p "$resource_dir"
 while read -r tf_file; do
 	file=$(basename "$tf_file")
 	cp -n "$tf_file" "$resource_dir/$file"
-done < <(find "$terraform_templates" -maxdepth 1 -iname '*.tf')
+done < <(find "$terraform_resources" -maxdepth 1 -iname '*.tf')
 
 ###
 # Get API token from secrets or bail early.
@@ -44,7 +44,7 @@ export TF_PLUGIN_CACHE_DIR="$PROVISIONER_PATH/.terraform"
 
 # Set node group name for server placement group
 node_group=$(carburator get json node_group_name string \
-	--path "$INVOCATION_BASE/$resource/.provider.exec.json")
+	--path "$terraform_resources/.provider.exec.json")
 
 if [[ -z $node_group ]]; then
 	carburator print terminal error \
@@ -56,7 +56,7 @@ export TF_VAR_node_group="$node_group"
 
 # Set nodes array as servers config source.
 nodes=$(carburator get json nodes array-raw \
-	--path "$INVOCATION_BASE/$resource/.provider.exec.json")
+	--path "$terraform_resources/.provider.exec.json")
 
 if [[ -z $nodes ]]; then
 	carburator print terminal error \
