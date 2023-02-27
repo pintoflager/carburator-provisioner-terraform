@@ -102,14 +102,14 @@ if [[ $exitcode -eq 0 ]]; then
 
 		# Register block and extract first (and the only) ip from it.
 		if [[ -n $ipv4 && $ipv4 != null ]]; then
-			address_block_uuid=$(carburator-rule address register-block "$ipv4" \
+			address_block_uuid=$(carburator address register-block "$ipv4" \
 				--extract \
 				--ip "$ipv4" \
 				--uuid \
 				--cidr 32) || exit 120
 
 			# Point address to node.
-			carburator-rule node address \
+			carburator node address \
 				--node-uuid "$node_uuid" \
 				--address-uuid "$address_block_uuid"
 		fi
@@ -124,13 +124,13 @@ if [[ $exitcode -eq 0 ]]; then
 
 			# This is the other way to handle the address block registration.
 			# register-block value has /cidr.
-			address_block_uuid=$(carburator-rule address register-block "$ipv6_block" \
+			address_block_uuid=$(carburator address register-block "$ipv6_block" \
 				--uuid \
 				--extract \
 				--ip "$ipv6") || exit 120
 
 			# Point address to node.
-			carburator-rule node address \
+			carburator node address \
 				--node-uuid "$node_uuid" \
 				--address-uuid "$address_block_uuid" || exit 120
 		fi

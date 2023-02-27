@@ -124,13 +124,13 @@ for (( i=0; i<len; i++ )); do
 			-p "$INVOCATION_BASE/node.json")
 
 		# Register block and extract first (and the only) ip from it.
-		net_uuid=$(carburator-rule address register-block "$network_range" \
+		net_uuid=$(carburator address register-block "$network_range" \
 			--extract \
 			--ip "$ip" \
 			--uuid) || exit 120
 
 		# Point address to node.
-		carburator-rule node address \
+		carburator node address \
 			--node-uuid "$node_uuid" \
 			--address-uuid "$net_uuid"
 

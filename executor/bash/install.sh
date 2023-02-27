@@ -1,37 +1,20 @@
 #!/usr/bin/env bash
 
-role="$1"
+# ATTENTION: Supports only client nodes, pointless to read role from $1
 
-# Package installation tasks on a local client node. Runs first
-#
-#
-if [ "$role" = 'client' ]; then
-    carburator print terminal info "Executing terraform install script on $role"
+if ! carburator has program terraform; then
+    carburator print terminal warn "Missing terraform on client machine."
 
-    if ! carburator has program terraform; then
-        carburator print terminal warn \
-            "Missing terraform on local client machine."
+    carburator prompt yes-no \
+        "Should we try to install terraform?" \
+        --yes-val "Yes try to install with a script" \
+        --no-val "No, I'll install everything"; exitcode=$?
 
-        carburator prompt yes-no \
-            "Should we try to install terraform? Installs on your PC." \
-            --yes-val "Yes try to install with a script" \
-            --no-val "No, I'll install everything"; exitcode=$?
-
-        if [[ $exitcode -ne 0 ]]; then
-          exit 120
-        fi
+    if [[ $exitcode -ne 0 ]]; then
+      exit 120
     fi
-fi
-
-# Package installation tasks on remote commander node.
-#
-#
-carburator print terminal info "Executing install script on $role"
-
-# Terraform is required.
-if carburator has program terraform; then
-  carburator print terminal info "Terraform found, skipping install..."
-  exit
+else
+    exit
 fi
 
 # TODO: Untested below.

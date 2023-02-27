@@ -6,5 +6,5 @@
 
 [dependency.bash]
 optional = false
-on_level = "Commander" # Node | Group | Project | Commander / Client
+on_level = "Client" # Node | Group | Project | Client
 collection = "Executor"
