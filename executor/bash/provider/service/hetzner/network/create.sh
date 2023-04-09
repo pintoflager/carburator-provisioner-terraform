@@ -4,16 +4,16 @@ carburator print terminal info "Invoking Hetzner's Terraform network provisioner
 
 resource="network"
 resource_dir="$INVOCATION_PATH/terraform"
-terraform_templates="$PROVISIONER_PATH/providers/hetzner/$resource"
+terraform_resources="$PROVISIONER_PATH/providers/hetzner/$resource"
 output="$INVOCATION_BASE/$resource.json"
 
-# Make sure terraform resource dir exist.
+# Make sure terraform resource dir exists.
 mkdir -p "$resource_dir"
 
 while read -r tf_file; do
 	file=$(basename "$tf_file")
 	cp -n "$tf_file" "$resource_dir/$file"
-done < <(find "$terraform_templates" -maxdepth 1 -iname '*.tf')
+done < <(find "$terraform_resources" -maxdepth 1 -iname '*.tf')
 
 ###
 # Get API token from secrets or bail out early.
@@ -49,8 +49,8 @@ provisioner_call() {
 
 # Network setup is expected to come from service provider with each network
 # zone separately
-if [[ -e "$INVOCATION_BASE/$resource/.eu.nodes.json" ]]; then
-	network_json=$(cat "$INVOCATION_BASE/$resource/.eu.nodes.json")
+if [[ -e "$terraform_resources/.eu.nodes.json" ]]; then
+	network_json=$(cat "$terraform_resources/.eu.nodes.json")
 	export TF_VAR_networks="$network_json"
 
 	# Analyze output json to determine if networks were registered OK.
@@ -63,8 +63,8 @@ if [[ -e "$INVOCATION_BASE/$resource/.eu.nodes.json" ]]; then
 	fi
 fi
 
-if [[ -e "$INVOCATION_BASE/$resource/.us.east.nodes.json" ]]; then
-	network_json=$(cat "$INVOCATION_BASE/$resource/.us.east.nodes.json")
+if [[ -e "$terraform_resources/.us.east.nodes.json" ]]; then
+	network_json=$(cat "$terraform_resources/.us.east.nodes.json")
 	export TF_VAR_networks="$network_json"
 
 	# Analyze output json to determine if networks were registered OK.
@@ -77,7 +77,7 @@ if [[ -e "$INVOCATION_BASE/$resource/.us.east.nodes.json" ]]; then
 	fi
 fi
 
-if [[ -e "$INVOCATION_BASE/$resource/.us.west.nodes.json" ]]; then
+if [[ -e "$terraform_resources/.us.west.nodes.json" ]]; then
 	network_json=$(cat "$INVOCATION_BASE/$resource/.us.east.west.json")
 	export TF_VAR_networks="$network_json"
 
@@ -94,7 +94,7 @@ fi
 # Register network IP addresses
 len=$(carburator get json node.value array --path "$output" | wc -l)
 network_range=$(carburator get json "network.value.ip_range" string -p "$output")
-nlen=$(carburator get json node.value array \
+nodes_len=$(carburator get json node.value array \
 	-p "$INVOCATION_BASE/node.json" | wc -l)
 
 # Loop all nodes attached to private network.
@@ -112,7 +112,7 @@ for (( i=0; i<len; i++ )); do
 	fi
 
 	# Loop all nodes from node.json, find node uuid, add block and address.
-	for (( j=0; j<nlen; j++ )); do
+	for (( j=0; j<nodes_len; j++ )); do
 		node_id=$(carburator get json "node.value.$i.id" string \
 			-p "$INVOCATION_BASE/node.json")
 
