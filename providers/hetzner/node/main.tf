@@ -24,7 +24,7 @@ provider "hcloud" {
 # Server placement.
 #
 resource "hcloud_placement_group" "server_placement" {
-  name = "${var.project_id}-${var.node_group}-placement"
+  name = "${var.project_id}-${var.cluster}-placement"
   type = "spread"
 }
 

@@ -34,9 +34,9 @@ export TF_VAR_project_id="$PROJECT_IDENTIFIER"
 export TF_DATA_DIR="$PROVISIONER_PATH/.terraform"
 export TF_PLUGIN_CACHE_DIR="$PROVISIONER_PATH/.terraform"
 
-node_group=$(carburator get json node_group_name string \
+cluster=$(carburator get json cluster_name string \
 	--path "$terraform_resources/.provider.exec.json")
-export TF_VAR_node_group="$node_group"
+export TF_VAR_cluster="$cluster"
 
 nodes=$(carburator get json nodes array-raw \
 	--path "$terraform_resources/.provider.exec.json")

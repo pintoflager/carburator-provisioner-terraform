@@ -11,7 +11,7 @@ variable "ssh_id" {
   default = ""
 }
 
-variable "node_group" {
+variable "cluster" {
   type = string
 }
 

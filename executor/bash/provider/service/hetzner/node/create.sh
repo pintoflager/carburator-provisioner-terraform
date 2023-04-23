@@ -42,17 +42,17 @@ export TF_VAR_project_id="$PROJECT_IDENTIFIER"
 export TF_DATA_DIR="$PROVISIONER_PATH/.terraform"
 export TF_PLUGIN_CACHE_DIR="$PROVISIONER_PATH/.terraform"
 
-# Set node group name for server placement group
-node_group=$(carburator get json node_group_name string \
+# Set cluster name for server placement group
+cluster=$(carburator get json cluster_name string \
 	--path "$terraform_resources/.provider.exec.json")
 
-if [[ -z $node_group ]]; then
+if [[ -z $cluster ]]; then
 	carburator print terminal error \
-		"Could not load node group name from .provider.exec.json"
+		"Could not load cluster name from .provider.exec.json"
 	exit 120
 fi
 
-export TF_VAR_node_group="$node_group"
+export TF_VAR_cluster="$cluster"
 
 # Set nodes array as servers config source.
 nodes=$(carburator get json nodes array-raw \
