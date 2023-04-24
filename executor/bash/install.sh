@@ -14,11 +14,11 @@ if ! carburator has program terraform; then
       exit 120
     fi
 else
-    exit
+    carburator print terminal success "Terraform found from the client"
+    exit 0
 fi
 
 # TODO: Untested below.
-
 carburator print terminal warn \
   "Missing required program Terraform. Trying to install it before proceeding..."
 
