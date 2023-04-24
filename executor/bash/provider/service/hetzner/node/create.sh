@@ -5,7 +5,7 @@ carburator print terminal info "Invoking Hetzner's Terraform server provisioner.
 resource="node"
 resource_dir="$INVOCATION_PATH/terraform"
 terraform_resources="$PROVISIONER_PATH/providers/hetzner/$resource"
-output="$INVOCATION_BASE/$resource.json"
+output="$INVOCATION_ROOT/$resource.json"
 
 # Make sure terraform resource dir exist.
 mkdir -p "$resource_dir"
@@ -26,7 +26,7 @@ if [[ -z $token || $exitcode -gt 0 ]]; then
 	exit 120
 fi
 
-project_output="$INVOCATION_BASE/project.json"
+project_output="$INVOCATION_ROOT/project.json"
 sshkey_id=$(carburator get json project.value.sshkey_id string \
 	-p "$project_output"); exitcode=$?
 

@@ -2,7 +2,7 @@
 
 resource="project"
 resource_dir="$INVOCATION_PATH/terraform"
-output="$INVOCATION_BASE/$resource.json"
+output="$INVOCATION_ROOT/$resource.json"
 
 ###
 # Get API token from secrets or bail early.

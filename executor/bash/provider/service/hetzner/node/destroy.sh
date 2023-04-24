@@ -3,7 +3,7 @@
 resource="node"
 resource_dir="$INVOCATION_PATH/terraform"
 terraform_resources="$PROVISIONER_PATH/providers/hetzner/$resource"
-output="$INVOCATION_BASE/$resource.json"
+output="$INVOCATION_ROOT/$resource.json"
 
 # Make sure terraform resource dir exist.
 mkdir -p "$resource_dir"

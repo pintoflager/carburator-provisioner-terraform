@@ -8,8 +8,8 @@ carburator print terminal info "Invoking Terraform github repository provisioner
 # Creates repository to the managed github account.
 #
 resource="repository"
-resource_dir="$INVOCATION_BASE/.tf-$resource"
-output="$INVOCATION_BASE/$resource.json"
+resource_dir="$INVOCATION_ROOT/.tf-$resource"
+output="$INVOCATION_ROOT/$resource.json"
 
 # Make sure terraform directories exist.
 mkdir -p "$PROVISIONER_PATH/.terraform" "$resource_dir"
@@ -18,8 +18,8 @@ mkdir -p "$PROVISIONER_PATH/.terraform" "$resource_dir"
 # These files can be modified without risk of unwarned overwrite.
 while read -r tf_file; do
 	file=$(basename "$tf_file")
-	cp -n "$tf_file" "$INVOCATION_BASE/.tf-$resource/$file"
-done < <(find "$INVOCATION_BASE/$resource" -maxdepth 1 -iname '*.tf')
+	cp -n "$tf_file" "$INVOCATION_ROOT/.tf-$resource/$file"
+done < <(find "$INVOCATION_ROOT/$resource" -maxdepth 1 -iname '*.tf')
 
 ###
 # Get API token from secrets or bail early.

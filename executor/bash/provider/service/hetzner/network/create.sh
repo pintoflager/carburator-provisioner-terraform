@@ -5,7 +5,7 @@ carburator print terminal info "Invoking Hetzner's Terraform network provisioner
 resource="network"
 resource_dir="$INVOCATION_PATH/terraform"
 terraform_resources="$PROVISIONER_PATH/providers/hetzner/$resource"
-output="$INVOCATION_BASE/$resource.json"
+output="$INVOCATION_ROOT/$resource.json"
 
 # Make sure terraform resource dir exists.
 mkdir -p "$resource_dir"
@@ -32,7 +32,7 @@ export TF_PLUGIN_CACHE_DIR="$PROVISIONER_PATH/.terraform"
 
 # We only connect nodes provisioned with terraform.
 nodes=$(carburator get json node.value array-raw \
-	--path "$INVOCATION_BASE/node.json")
+	--path "$INVOCATION_ROOT/node.json")
 export TF_VAR_nodes="$nodes"
 
 provisioner_call() {
@@ -78,7 +78,7 @@ if [[ -e "$terraform_resources/.us.east.nodes.json" ]]; then
 fi
 
 if [[ -e "$terraform_resources/.us.west.nodes.json" ]]; then
-	network_json=$(cat "$INVOCATION_BASE/$resource/.us.east.west.json")
+	network_json=$(cat "$INVOCATION_ROOT/$resource/.us.east.west.json")
 	export TF_VAR_networks="$network_json"
 
 	# Analyze output json to determine if networks were registered OK.
@@ -95,7 +95,7 @@ fi
 len=$(carburator get json node.value array --path "$output" | wc -l)
 network_range=$(carburator get json "network.value.ip_range" string -p "$output")
 nodes_len=$(carburator get json node.value array \
-	-p "$INVOCATION_BASE/node.json" | wc -l)
+	-p "$INVOCATION_ROOT/node.json" | wc -l)
 
 # Loop all nodes attached to private network.
 for (( i=0; i<len; i++ )); do
@@ -114,14 +114,14 @@ for (( i=0; i<len; i++ )); do
 	# Loop all nodes from node.json, find node uuid, add block and address.
 	for (( j=0; j<nodes_len; j++ )); do
 		node_id=$(carburator get json "node.value.$i.id" string \
-			-p "$INVOCATION_BASE/node.json")
+			-p "$INVOCATION_ROOT/node.json")
 
 		# Not what we're looking for.
 		if [[ $node_id != "$id" ]]; then continue; fi
 
 		# Easiest way to find the right node is with it's UUID
 		node_uuid=$(carburator get json "node.value.$i.labels.uuid" string \
-			-p "$INVOCATION_BASE/node.json")
+			-p "$INVOCATION_ROOT/node.json")
 
 		# Register block and extract first (and the only) ip from it.
 		net_uuid=$(carburator address register-block "$network_range" \
