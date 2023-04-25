@@ -7,7 +7,7 @@ output="$PROVISIONER_GIT_PROVIDER_PATH/$resource.json"
 ###
 # Get API token from secrets or bail early.
 #
-token=$(carburator get secret "$PROVISIONER_GIT_PROVIDER_SECRET_0" --user root); exitcode=$?
+token=$(carburator get secret "$PROVISIONER_GIT_PROVIDER_SECRETS_0" --user root); exitcode=$?
 
 if [[ -z $token || $exitcode -gt 0 ]]; then
 	carburator print terminal error \
