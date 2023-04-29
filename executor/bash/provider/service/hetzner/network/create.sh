@@ -47,48 +47,41 @@ provisioner_call() {
 	fi
 }
 
+response_analysis() {
+	if [[ $1 -eq 0 ]]; then
+		carburator print terminal success "$2"
+	else
+		exit 110
+	fi
+}
+
 # Network setup is expected to come from service provider with each network
 # zone separately
-if [[ -e "$terraform_resources/.eu.nodes.json" ]]; then
-	network_json=$(cat "$terraform_resources/.eu.nodes.json")
-	export TF_VAR_networks="$network_json"
+eu_net=$(carburator get json net_eu object-raw -p '.exec.json')
+if [[ -n "$eu_net" ]]; then
+	export TF_VAR_networks="$eu_net"
 
 	# Analyze output json to determine if networks were registered OK.
 	provisioner_call "$resource_dir" "$output"; exitcode=$?
-
-	if [[ $exitcode -eq 0 ]]; then
-		carburator print terminal success "Europe central networks created."	
-	else
-		exit 110
-	fi
+	response_analysis "$exitcode" "Europe central networks created."
 fi
 
-if [[ -e "$terraform_resources/.us.east.nodes.json" ]]; then
-	network_json=$(cat "$terraform_resources/.us.east.nodes.json")
-	export TF_VAR_networks="$network_json"
+us_ea_net=$(carburator get json net_us_ea object-raw -p '.exec.json')
+if [[ -n "$us_ea_net" ]]; then
+	export TF_VAR_networks="$us_ea_net"
 
 	# Analyze output json to determine if networks were registered OK.
 	provisioner_call "$resource_dir" "$output"; exitcode=$?
-
-	if [[ $exitcode -eq 0 ]]; then
-		carburator print terminal success "USA east networks created."
-	else
-		exit 110
-	fi
+	response_analysis "$exitcode" "USA east networks created."
 fi
 
-if [[ -e "$terraform_resources/.us.west.nodes.json" ]]; then
-	network_json=$(cat "$INVOCATION_ROOT/$resource/.us.east.west.json")
-	export TF_VAR_networks="$network_json"
+us_we_net=$(carburator get json net_us_we object-raw -p '.exec.json')
+if [[ -n "$us_we_net" ]]; then
+	export TF_VAR_networks="$us_we_net"
 
 	# Analyze output json to determine if networks were registered OK.
 	provisioner_call "$resource_dir" "$output"; exitcode=$?
-
-	if [[ $exitcode -eq 0 ]]; then
-		carburator print terminal success "USA west networks created."	
-	else
-		exit 110
-	fi
+	response_analysis "$exitcode" "USA west networks created."
 fi
 
 # Register network IP addresses

@@ -8,11 +8,6 @@ variable "hcloud_token" {
 # Has to be added as TF_VAR before running init / apply
 variable "ssh_id" {
   type = string
-  default = ""
-}
-
-variable "cluster" {
-  type = string
 }
 
 variable "project_id" {
@@ -22,6 +17,9 @@ variable "project_id" {
 variable "nodes" {
   type = list(
     object({
+      cluster = object({
+        name = string
+      })
       hostname = string
       uuid = string
       os = object({

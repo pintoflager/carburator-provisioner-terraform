@@ -10,6 +10,9 @@ output="$INVOCATION_ROOT/$resource.json"
 # Make sure terraform resource dir exist.
 mkdir -p "$resource_dir"
 
+# Copy terraform files from package to execution dir.
+# This way files can be modified and package update won't overwrite
+# the changes.
 while read -r tf_file; do
 	file=$(basename "$tf_file")
 	cp -n "$tf_file" "$resource_dir/$file"
@@ -18,7 +21,8 @@ done < <(find "$terraform_resources" -maxdepth 1 -iname '*.tf')
 ###
 # Get API token from secrets or bail early.
 #
-token=$(carburator get secret "$PROVISIONER_SERVICE_PROVIDER_SECRETS_0" --user root); exitcode=$?
+token=$(carburator get secret "$PROVISIONER_SERVICE_PROVIDER_SECRETS_0" --user root)
+exitcode=$?
 
 if [[ -z $token || $exitcode -gt 0 ]]; then
 	carburator print terminal error \
@@ -32,7 +36,7 @@ sshkey_id=$(carburator get json project.value.sshkey_id string \
 
 if [[ -z $sshkey_id || $exitcode -gt 0 ]]; then
 	carburator print terminal error \
-		"Could not load $PROVIDER_NAME sshkey id from terraform/.env. Unable to proceed"
+		"Could not load $PROVIDER_NAME sshkey id. Unable to proceed."
 	exit 120
 fi
 
@@ -42,25 +46,11 @@ export TF_VAR_project_id="$PROJECT_IDENTIFIER"
 export TF_DATA_DIR="$PROVISIONER_PATH/.terraform"
 export TF_PLUGIN_CACHE_DIR="$PROVISIONER_PATH/.terraform"
 
-# Set cluster name for server placement group
-cluster=$(carburator get json cluster_name string \
-	--path "$terraform_resources/.provider.exec.json")
-
-if [[ -z $cluster ]]; then
-	carburator print terminal error \
-		"Could not load cluster name from .provider.exec.json"
-	exit 120
-fi
-
-export TF_VAR_cluster="$cluster"
-
 # Set nodes array as servers config source.
-nodes=$(carburator get json nodes array-raw \
-	--path "$terraform_resources/.provider.exec.json")
+nodes=$(carburator get json nodes array-raw -p '.exec.json')
 
 if [[ -z $nodes ]]; then
-	carburator print terminal error \
-		"Could not load nodes array from .provider.exec.json"
+	carburator print terminal error "Could not load nodes array from .exec.json"
 	exit 120
 fi
 
@@ -83,14 +73,15 @@ provisioner_call "$resource_dir" "$output"; exitcode=$?
 
 if [[ $exitcode -eq 0 ]]; then
 	carburator print terminal success "Create nodes succeeded."
-	
-	# Register IP address blocks and addresses
-	carburator print terminal info "Extracting IP address blocks..."
 
 	len=$(carburator get json node.value array --path "$output" | wc -l)
 	for (( i=0; i<len; i++ )); do
 		# Easiest way to find the right node is with it's UUID
 		node_uuid=$(carburator get json "node.value.$i.labels.uuid" string -p "$output")
+
+		name=$(carburator get json "node.value.$i.name" string -p "$output")
+		carburator print terminal info "Locking node '$name' provisioner to Terraform..."
+		carburator node lock-provisioner 'terraform' --node-uuid "$node_uuid"
 
 		# With Hetzner we know ipv4 comes without cidr. That's pretty obvious as these
 		# blocks are expensive and ipv4's are running out.
@@ -102,6 +93,9 @@ if [[ $exitcode -eq 0 ]]; then
 
 		# Register block and extract first (and the only) ip from it.
 		if [[ -n $ipv4 && $ipv4 != null ]]; then
+			carburator print terminal info \
+				"Extracting IPv4 address blocks from node '$name' IP..."
+
 			address_block_uuid=$(carburator address register-block "$ipv4" \
 				--extract \
 				--ip "$ipv4" \
@@ -120,6 +114,9 @@ if [[ $exitcode -eq 0 ]]; then
 		
 		# Register block and the IP that Hetzner has set up for the node.
 		if [[ -n $ipv6_block && $ipv6_block != null ]]; then
+			carburator print terminal info \
+				"Extracting IPv6 address blocks from node '$name' IP..."
+
 			ipv6=$(carburator get json "node.value.$i.ipv6" string -p "$output")
 
 			# This is the other way to handle the address block registration.

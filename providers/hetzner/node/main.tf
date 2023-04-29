@@ -24,26 +24,27 @@ provider "hcloud" {
 # Server placement.
 #
 resource "hcloud_placement_group" "server_placement" {
-  name = "${var.project_id}-${var.cluster}-placement"
-  type = "spread"
+  for_each = local.clusters
+  name     = "${var.project_id}-${each.value}-placement"
+  type     = "spread"
 }
 
 ###
 # Servers.
 #
 resource "hcloud_server" "servers" {
-  count       = length(var.nodes)
-  name        = "${var.nodes[count.index].hostname}"
-  image       = "${var.nodes[count.index].os.name}"
-  server_type = "${var.nodes[count.index].plan.name}"
-  location    = "${var.nodes[count.index].location.name}"
+  for_each    = local.nodes
+  name        = each.value.hostname
+  image       = each.value.os.name
+  server_type = each.value.plan.name
+  location    = each.value.location.name
   public_net {
-    ipv4_enabled = var.nodes[count.index].toggles.ipv4
-    ipv6_enabled = var.nodes[count.index].toggles.ipv6
+    ipv4_enabled = each.value.toggles.ipv4
+    ipv6_enabled = each.value.toggles.ipv6
   }
   ssh_keys = [var.ssh_id]
-  placement_group_id = hcloud_placement_group.server_placement.id
+  placement_group_id = hcloud_placement_group.server_placement[each.value.cluster.name].id
   labels = {
-    "uuid" : "${var.nodes[count.index].uuid}"
+    "uuid" : each.value.uuid
   }
 }
