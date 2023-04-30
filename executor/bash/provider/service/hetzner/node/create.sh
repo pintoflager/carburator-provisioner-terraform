@@ -4,8 +4,12 @@ carburator print terminal info "Invoking Hetzner's Terraform server provisioner.
 
 resource="node"
 resource_dir="$INVOCATION_PATH/terraform"
-terraform_resources="$PROVISIONER_PATH/providers/hetzner/$resource"
-output="$INVOCATION_PATH/$resource.json"
+data_dir="$PROVISIONER_PATH/providers/hetzner"
+terraform_sourcedir="$data_dir/$resource"
+
+# Resource data paths
+node_out="$data_dir/$resource.json"
+project_out="$data_dir/project.json"
 
 # Make sure terraform resource dir exist.
 mkdir -p "$resource_dir"
@@ -16,7 +20,7 @@ mkdir -p "$resource_dir"
 while read -r tf_file; do
 	file=$(basename "$tf_file")
 	cp -n "$tf_file" "$resource_dir/$file"
-done < <(find "$terraform_resources" -maxdepth 1 -iname '*.tf')
+done < <(find "$terraform_sourcedir" -maxdepth 1 -iname '*.tf')
 
 ###
 # Get API token from secrets or bail early.
@@ -30,9 +34,8 @@ if [[ -z $token || $exitcode -gt 0 ]]; then
 	exit 120
 fi
 
-project_output="$INVOCATION_PATH/project.json"
 sshkey_id=$(carburator get json project.value.sshkey_id string \
-	-p "$project_output"); exitcode=$?
+	-p "$project_out"); exitcode=$?
 
 if [[ -z $sshkey_id || $exitcode -gt 0 ]]; then
 	carburator print terminal error \
@@ -63,23 +66,23 @@ provisioner_call() {
 	terraform -chdir="$1" output -json > "$2"
 
 	# Assuming create failed as we cant load the output
-	if ! carburator has json node.value --path "$2"; then
+	if ! carburator has json node.value -p "$2"; then
 		carburator print terminal error "Create nodes failed."
 		return 110
 	fi
 }
 
-provisioner_call "$resource_dir" "$output"; exitcode=$?
+provisioner_call "$resource_dir" "$node_out"; exitcode=$?
 
 if [[ $exitcode -eq 0 ]]; then
 	carburator print terminal success "Create nodes succeeded."
 
-	len=$(carburator get json node.value array --path "$output" | wc -l)
+	len=$(carburator get json node.value array -p "$node_out" | wc -l)
 	for (( i=0; i<len; i++ )); do
 		# Easiest way to find the right node is with it's UUID
-		node_uuid=$(carburator get json "node.value.$i.labels.uuid" string -p "$output")
+		node_uuid=$(carburator get json "node.value.$i.labels.uuid" string -p "$node_out")
 
-		name=$(carburator get json "node.value.$i.name" string -p "$output")
+		name=$(carburator get json "node.value.$i.name" string -p "$node_out")
 		carburator print terminal info "Locking node '$name' provisioner to Terraform..."
 		carburator node lock-provisioner 'terraform' --node-uuid "$node_uuid"
 
@@ -89,7 +92,7 @@ if [[ $exitcode -eq 0 ]]; then
 		# We have to define the CIDR block we use.
 		# register-block value could be suffixed with /32 as well but lets leave a
 		# reminder how to use the --cidr flag.
-		ipv4=$(carburator get json "node.value.$i.ipv4" string -p "$output")
+		ipv4=$(carburator get json "node.value.$i.ipv4" string -p "$node_out")
 
 		# Register block and extract first (and the only) ip from it.
 		if [[ -n $ipv4 && $ipv4 != null ]]; then
@@ -110,14 +113,14 @@ if [[ $exitcode -eq 0 ]]; then
 
 		# Hetzner gives with each ipv6 address a full /64 block so let's register
 		# that then.
-		ipv6_block=$(carburator get json "node.value.$i.ipv6_block" string -p "$output")
+		ipv6_block=$(carburator get json "node.value.$i.ipv6_block" string -p "$node_out")
 		
 		# Register block and the IP that Hetzner has set up for the node.
 		if [[ -n $ipv6_block && $ipv6_block != null ]]; then
 			carburator print terminal info \
 				"Extracting IPv6 address blocks from node '$name' IP..."
 
-			ipv6=$(carburator get json "node.value.$i.ipv6" string -p "$output")
+			ipv6=$(carburator get json "node.value.$i.ipv6" string -p "$node_out")
 
 			# This is the other way to handle the address block registration.
 			# register-block value has /cidr.

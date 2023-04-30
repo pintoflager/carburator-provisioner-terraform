@@ -4,9 +4,12 @@ carburator print terminal info "Invoking Hetzner's Terraform network provisioner
 
 resource="network"
 resource_dir="$INVOCATION_PATH/terraform"
-terraform_resources="$PROVISIONER_PATH/providers/hetzner/$resource"
-net_out="$INVOCATION_PATH/$resource.json"
-node_out="$INVOCATION_PATH/node.json"
+data_dir="$PROVISIONER_PATH/providers/hetzner"
+terraform_sourcedir="$data_dir/$resource"
+
+# Resource data paths
+network_out="$data_dir/$resource.json"
+node_out="$data_dir/node.json"
 
 # Make sure terraform resource dir exists.
 mkdir -p "$resource_dir"
@@ -14,7 +17,7 @@ mkdir -p "$resource_dir"
 while read -r tf_file; do
 	file=$(basename "$tf_file")
 	cp -n "$tf_file" "$resource_dir/$file"
-done < <(find "$terraform_resources" -maxdepth 1 -iname '*.tf')
+done < <(find "$terraform_sourcedir" -maxdepth 1 -iname '*.tf')
 
 ###
 # Get API token from secrets or bail out early.
@@ -72,17 +75,17 @@ response_analysis() {
 ###
 # Register node private network IP addresses to project
 #
-len=$(carburator get json node.value array --path "$net_out" | wc -l)
-network_range=$(carburator get json "network.value.ip_range" string -p "$net_out")
+len=$(carburator get json node.value array --path "$network_out" | wc -l)
+network_range=$(carburator get json "network.value.ip_range" string -p "$network_out")
 nodes_len=$(carburator get json node.value array -p "$node_out" | wc -l)
 
 # Loop all nodes attached to private network.
 for (( i=0; i<len; i++ )); do
 	# Find node uuid with terraform node id.
-	id=$(carburator get json "node.value.$i.server_id" number -p "$net_out") || exit 120
+	id=$(carburator get json "node.value.$i.server_id" number -p "$network_out") || exit 120
 	
 	# Private network addresses are always ipv4
-	ip=$(carburator get json "node.value.$i.ip" string -p "$net_out") || exit 120
+	ip=$(carburator get json "node.value.$i.ip" string -p "$network_out") || exit 120
 
 	if [[ -z $ip || $ip == null ]]; then
 		carburator print terminal error "Unable to find IP for node with ID '$id'"

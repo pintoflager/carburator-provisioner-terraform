@@ -7,8 +7,11 @@ carburator print terminal info "Invoking Terraform project provisioner..."
 #
 resource="project"
 resource_dir="$INVOCATION_PATH/terraform"
-terraform_templates="$PROVISIONER_PATH/providers/hetzner/$resource"
-output="$INVOCATION_PATH/$resource.json"
+data_dir="$PROVISIONER_PATH/providers/hetzner"
+terraform_sourcedir="$data_dir/$resource"
+
+# Resource data paths
+project_out="$data_dir/$resource.json"
 
 # Make sure terraform directories exist.
 mkdir -p "$PROVISIONER_PATH/.terraform" "$resource_dir"
@@ -18,7 +21,7 @@ mkdir -p "$PROVISIONER_PATH/.terraform" "$resource_dir"
 while read -r tf_file; do
 	file=$(basename "$tf_file")
 	cp -n "$tf_file" "$resource_dir/$file"
-done < <(find "$terraform_templates" -maxdepth 1 -iname '*.tf')
+done < <(find "$terraform_sourcedir" -maxdepth 1 -iname '*.tf')
 
 ###
 # Get API token from secrets or bail early.
@@ -55,7 +58,7 @@ provisioner_call() {
 }
 
 # Analyze output json to determine if project was registered OK.
-provisioner_call "$resource_dir" "$output"; exitcode=$?
+provisioner_call "$resource_dir" "$project_out"; exitcode=$?
 
 if [[ $exitcode -eq 0 ]]; then
 	carburator print terminal success "Terraform provisioner terminated successfully"
