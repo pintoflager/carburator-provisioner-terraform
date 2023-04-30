@@ -24,16 +24,18 @@ provider "hcloud" {
 # Networks.
 #
 resource "hcloud_network" "private_networks" {
-  name     = "${var.networks.network.name}-private"
-  ip_range = var.networks.network.range
+  for_each = local.clusters
+  name     = "${each.key}-private"
+  ip_range = var.net_range
 }
 
 # Subnet from instance.
 resource "hcloud_network_subnet" "private_networks_subnet" {
-  network_id   = hcloud_network.private_networks.id
-  type         = var.networks.network.type
-  network_zone = var.networks.network.zone
-  ip_range     = var.networks.network.range
+  for_each     = local.clusters
+  network_id   = hcloud_network[each.key].private_networks.id
+  type         = var.net_type
+  network_zone = local.zones[each.key]
+  ip_range     = var.net_range
   depends_on   = [
     hcloud_network.private_networks
   ]
@@ -41,7 +43,7 @@ resource "hcloud_network_subnet" "private_networks_subnet" {
 
 # Add server nodes to subnet.
 resource "hcloud_server_network" "private_networks_servers" {
-  count        = length(var.networks.nodes)
-  server_id    = var.nodes[index(var.nodes.*.name, var.networks.nodes[count.index])].id
-  network_id   = hcloud_network.private_networks.id
+  for_each     = local.nodes
+  server_id    = each.value.id
+  network_id   = hcloud_network[each.value.cluster].private_networks.id
 }

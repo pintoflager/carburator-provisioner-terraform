@@ -2,7 +2,7 @@
 
 resource="network"
 resource_dir="$INVOCATION_PATH/terraform"
-output="$INVOCATION_ROOT/$resource.json"
+output="$INVOCATION_PATH/$resource.json"
 
 ###
 # Get API token from secrets or bail out early.
@@ -21,7 +21,7 @@ export TF_PLUGIN_CACHE_DIR="$PROVISIONER_PATH/.terraform"
 
 # We only connect nodes provisioned with terraform.
 nodes=$(carburator get json node.value array-raw \
-	--path "$INVOCATION_ROOT/node.json")
+	--path "$INVOCATION_PATH/node.json")
 export TF_VAR_nodes="$nodes"
 
 provisioner_call() {
@@ -31,8 +31,8 @@ provisioner_call() {
 
 # Network setup is expected to come from service provider with each network
 # zone separately
-if [[ -e "$INVOCATION_ROOT/$resource/.eu.nodes.json" ]]; then
-	network_json=$(cat "$INVOCATION_ROOT/$resource/.eu.nodes.json")
+if [[ -e "$INVOCATION_PATH/$resource/.eu.nodes.json" ]]; then
+	network_json=$(cat "$INVOCATION_PATH/$resource/.eu.nodes.json")
 	export TF_VAR_networks="$network_json"
 
 	if provisioner_call "$resource_dir"; then
@@ -42,8 +42,8 @@ if [[ -e "$INVOCATION_ROOT/$resource/.eu.nodes.json" ]]; then
 	fi
 fi
 
-if [[ -e "$INVOCATION_ROOT/$resource/.us.east.nodes.json" ]]; then
-	network_json=$(cat "$INVOCATION_ROOT/$resource/.us.east.nodes.json")
+if [[ -e "$INVOCATION_PATH/$resource/.us.east.nodes.json" ]]; then
+	network_json=$(cat "$INVOCATION_PATH/$resource/.us.east.nodes.json")
 	export TF_VAR_networks="$network_json"
 
 	if provisioner_call "$resource_dir"; then
@@ -53,8 +53,8 @@ if [[ -e "$INVOCATION_ROOT/$resource/.us.east.nodes.json" ]]; then
 	fi
 fi
 
-if [[ -e "$INVOCATION_ROOT/$resource/.us.west.nodes.json" ]]; then
-	network_json=$(cat "$INVOCATION_ROOT/$resource/.us.east.west.json")
+if [[ -e "$INVOCATION_PATH/$resource/.us.west.nodes.json" ]]; then
+	network_json=$(cat "$INVOCATION_PATH/$resource/.us.east.west.json")
 	export TF_VAR_networks="$network_json"
 
 	if provisioner_call "$resource_dir"; then

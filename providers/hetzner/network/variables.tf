@@ -5,19 +5,40 @@ variable "hcloud_token" {
   sensitive = true
 }
 
-variable "networks" {
-  type = object({
-    network = object({
-        name       = string
-        range      = string
-        zone       = string
-        type       = string
-    })
-    nodes        = list(string)
-  })
+variable "net_range" {
+  type = string
 }
 
-variable "nodes" {
+variable "net_type" {
+  type = string
+}
+
+variable "net_nodes" {
+  type = list(
+    object({
+      cluster = object({
+        name = string
+      })
+      hostname = string
+      uuid = string
+      os = object({
+        name = string
+      })
+      plan = object({
+        name = string
+      })
+      location = object({
+        name = string
+      })
+      toggles = object({
+        ipv4 = bool
+        ipv6 = bool
+      })
+    })  
+  )
+}
+
+variable "nodes_output" {
   type = list(
     object({
       name     = string

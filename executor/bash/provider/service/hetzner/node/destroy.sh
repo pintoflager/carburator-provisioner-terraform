@@ -2,7 +2,7 @@
 
 resource="node"
 resource_dir="$INVOCATION_PATH/terraform"
-output="$INVOCATION_ROOT/$resource.json"
+output="$INVOCATION_PATH/$resource.json"
 
 # Make sure terraform resource dir exist.
 mkdir -p "$resource_dir"

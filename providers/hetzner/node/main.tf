@@ -25,7 +25,7 @@ provider "hcloud" {
 #
 resource "hcloud_placement_group" "server_placement" {
   for_each = local.clusters
-  name     = "${var.project_id}-${each.value}-placement"
+  name     = each.value
   type     = "spread"
 }
 
@@ -34,7 +34,7 @@ resource "hcloud_placement_group" "server_placement" {
 #
 resource "hcloud_server" "servers" {
   for_each    = local.nodes
-  name        = each.value.hostname
+  name        = each.key
   image       = each.value.os.name
   server_type = each.value.plan.name
   location    = each.value.location.name
@@ -46,5 +46,6 @@ resource "hcloud_server" "servers" {
   placement_group_id = hcloud_placement_group.server_placement[each.value.cluster.name].id
   labels = {
     "uuid" : each.value.uuid
+    "cluster": each.value.cluster.name
   }
 }

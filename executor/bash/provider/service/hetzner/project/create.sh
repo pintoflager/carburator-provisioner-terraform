@@ -8,7 +8,7 @@ carburator print terminal info "Invoking Terraform project provisioner..."
 resource="project"
 resource_dir="$INVOCATION_PATH/terraform"
 terraform_templates="$PROVISIONER_PATH/providers/hetzner/$resource"
-output="$INVOCATION_ROOT/$resource.json"
+output="$INVOCATION_PATH/$resource.json"
 
 # Make sure terraform directories exist.
 mkdir -p "$PROVISIONER_PATH/.terraform" "$resource_dir"
