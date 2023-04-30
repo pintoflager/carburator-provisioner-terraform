@@ -19,20 +19,8 @@ variable "net_nodes" {
       cluster = object({
         name = string
       })
-      hostname = string
-      uuid = string
-      os = object({
-        name = string
-      })
-      plan = object({
-        name = string
-      })
       location = object({
         name = string
-      })
-      toggles = object({
-        ipv4 = bool
-        ipv6 = bool
       })
     })  
   )

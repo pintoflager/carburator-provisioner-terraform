@@ -2,7 +2,7 @@
 # Principal output for nodes.
 #
 output "node" {
-  description = "Server node registration output"
+  description = "Server nodes from clusters"
   value = [
     for i, v in hcloud_server.servers: ({
       name                = v.name
@@ -19,9 +19,12 @@ output "node" {
 }
 
 output "server_placement" {
-  description = "Placement group for the cluster servers"
-  value       = {
-    name   = hcloud_placement_group.server_placement.name
-    id     = hcloud_placement_group.server_placement.id
-  }
+  description = "Placement groups for each cluster"
+  value       = [
+    for i, v in hcloud_placement_group.server_placement: ({
+      name = v.name
+      id   = v.id
+      type = v.type
+    })
+  ]
 }

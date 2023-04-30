@@ -21,7 +21,9 @@ variable "nodes" {
         name = string
       })
       hostname = string
-      uuid = string
+      ownership = object({
+        ref = string
+      })
       os = object({
         name = string
       })
