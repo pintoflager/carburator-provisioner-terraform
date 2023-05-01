@@ -75,7 +75,8 @@ provisioner_call() {
 provisioner_call "$resource_dir" "$node_out"; exitcode=$?
 
 if [[ $exitcode -eq 0 ]]; then
-	carburator print terminal success "Create nodes succeeded."
+	carburator print terminal success \
+		"Server nodes created successfully with Terraform."
 
 	len=$(carburator get json node.value array -p "$node_out" | wc -l)
 	for (( i=0; i<len; i++ )); do
