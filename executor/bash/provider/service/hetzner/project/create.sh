@@ -40,7 +40,7 @@ export TF_PLUGIN_CACHE_DIR="$PROVISIONER_PATH/.terraform"
 
 export TF_VAR_apitoken="$token"
 export TF_VAR_keyname="${PROJECT_IDENTIFIER}-root"
-export TF_VAR_pubkey="$SSHKEY_ROOT_PUBLIC"
+export TF_VAR_pubkey="$ROOT_SSH_PUBKEY"
 export TF_VAR_identifier="$PROJECT_IDENTIFIER"
 
 provisioner_call() {
