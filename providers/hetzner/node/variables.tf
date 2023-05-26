@@ -17,9 +17,7 @@ variable "project_id" {
 variable "nodes" {
   type = list(
     object({
-      cluster = object({
-        name = string
-      })
+      cluster = string
       hostname = string
       ownership = object({
         ref = string

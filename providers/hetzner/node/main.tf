@@ -43,9 +43,9 @@ resource "hcloud_server" "servers" {
     ipv6_enabled = each.value.toggles.ipv6
   }
   ssh_keys = [var.ssh_id]
-  placement_group_id = hcloud_placement_group.server_placement[each.value.cluster.name].id
+  placement_group_id = hcloud_placement_group.server_placement[each.value.cluster].id
   labels = {
     "uuid" : each.value.ownership.ref
-    "cluster": each.value.cluster.name
+    "cluster": each.value.cluster
   }
 }
