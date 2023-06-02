@@ -39,4 +39,4 @@ fi
 
 path="https://releases.hashicorp.com/terraform/${version}/terraform_${version}_linux_${arch}.zip"
 
-carburator sudo wget -qO- "$path" | bsdtar -xvf- -C /usr/local/bin/
+wget -qO- "$path" | bsdtar -xvf- -C /usr/local/bin/
