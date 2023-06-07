@@ -100,7 +100,7 @@ if [[ $exitcode -eq 0 ]]; then
 			carburator print terminal info \
 				"Extracting IPv4 address blocks from node '$name' IP..."
 
-			address_block_uuid=$(carburator address register-block "$ipv4" \
+			address_block_uuid=$(carburator register net-block "$ipv4" \
 				--extract \
 				--ip "$ipv4" \
 				--uuid \
@@ -125,7 +125,7 @@ if [[ $exitcode -eq 0 ]]; then
 
 			# This is the other way to handle the address block registration.
 			# register-block value has /cidr.
-			address_block_uuid=$(carburator address register-block "$ipv6_block" \
+			address_block_uuid=$(carburator register net-block "$ipv6_block" \
 				--uuid \
 				--extract \
 				--ip "$ipv6") || exit 120

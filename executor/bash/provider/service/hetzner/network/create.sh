@@ -119,7 +119,7 @@ for (( a=0; a<net_len; a++ )); do
 				-p "$node_out")
 
 			# Register block and extract first (and the only) ip from it.
-			net_uuid=$(carburator address register-block "$block" \
+			net_uuid=$(carburator register net-block "$block" \
 				--extract \
 				--ip "$ip" \
 				--uuid); exitcode=$?
