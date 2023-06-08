@@ -11,7 +11,7 @@ if ! carburator has program terraform; then
         --no-val "No, I'll install everything"; exitcode=$?
 
     if [[ $exitcode -ne 0 ]]; then
-      exit 120
+        exit 120
     fi
 else
     carburator print terminal success "Terraform found from the client"
@@ -27,14 +27,14 @@ version="1.3.6"
 arch="$(uname -m)"
 
 if [ "$arch" = "x86_64" ]; then
-  arch="amd64"
+    arch="amd64"
 elif [ "$arch" = "armv7" ]; then
-  arch="arm"
+    arch="arm"
 elif [ "$arch" = "aarch64" ]; then
-  arch="arm64"
+    arch="arm64"
 else
-  carburator print terminal error
-    "Unsupported arch: $arch" && exit 120
+    carburator print terminal error "Unsupported host arch: $arch"
+    exit 120
 fi
 
 path="https://releases.hashicorp.com/terraform/${version}/terraform_${version}_linux_${arch}.zip"
