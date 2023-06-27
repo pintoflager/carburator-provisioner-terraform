@@ -121,6 +121,8 @@ for (( a=0; a<net_len; a++ )); do
 			# Register block and extract first (and the only) ip from it.
 			net_uuid=$(carburator register net-block "$block" \
 				--extract \
+				--provider hetzner \
+				--provisioner terraform \
 				--ip "$ip" \
 				--uuid); exitcode=$?
 

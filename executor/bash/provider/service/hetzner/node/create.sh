@@ -104,6 +104,8 @@ if [[ $exitcode -eq 0 ]]; then
 				--extract \
 				--ip "$ipv4" \
 				--uuid \
+				--provider hetzner \
+				--provisioner terraform \
 				--cidr 32) || exit 120
 
 			# Point address to node.
@@ -128,6 +130,8 @@ if [[ $exitcode -eq 0 ]]; then
 			address_block_uuid=$(carburator register net-block "$ipv6_block" \
 				--uuid \
 				--extract \
+				--provider hetzner \
+				--provisioner terraform \
 				--ip "$ipv6") || exit 120
 
 			# Point address to node.
