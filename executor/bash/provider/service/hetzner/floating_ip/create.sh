@@ -93,22 +93,16 @@ if [[ $exitcode -eq 0 ]]; then
 		"Floating IP address(es) created successfully with Terraform."
 
     # Check if IPv4 was provisioned
-    fip4=$(carburator get json floating_ip.value.ipv4 -p "$fip_out")
-    fip6=$(carburator get json floating_ip.value.ipv6 -p "$fip_out")
+    fip4=$(carburator get json floating_ip.value.ipv4.ip_address \
+        string -p "$fip_out")
 
-    if [[ -z $fip4 || -z $fip6 ]]; then
-        carburator print terminal error "Bad output from terraform floating IP create"
-        exit 120
-    fi
-
-    if [[ $fip4 != null ]]; then
+    if [[ -n $fip4 ]]; then
         carburator print terminal info \
             "Extracting IPv4 address block from floating IP '$tag'..."
         
-        ipv4=$(carburator get json floating_ip.value.ipv4.ip_address -p "$fip_out")
-        v4_block_uuid=$(carburator register net-block "$ipv4" \
+        v4_block_uuid=$(carburator register net-block "$fip4" \
             --extract \
-            --ip "$ipv4" \
+            --ip "$fip4" \
             --uuid \
             --floating \
             --provider hetzner \
@@ -117,7 +111,7 @@ if [[ $exitcode -eq 0 ]]; then
 
         # Point address to node.
         v4_node_uuid=$(carburator get json floating_ip.value.ipv4.labels.primary \
-            -p "$fip_out")
+            string -p "$fip_out")
         
         carburator node address \
             --node-uuid "$v4_node_uuid" \
@@ -127,24 +121,27 @@ if [[ $exitcode -eq 0 ]]; then
     fi
 
 	# Same as above but for IPv6 which is a real network block of /64
-    if [[ $fip6 != null ]]; then
+    fip6=$(carburator get json floating_ip.value.ipv6.ip_address \
+        string -p "$fip_out")
+    
+    if [[ -n $fip6 ]]; then
         carburator print terminal info \
             "Extracting IPv6 address block from floating IP '$tag'..."
         
-        ipv6=$(carburator get json floating_ip.value.ipv6.ip_address -p "$fip_out")
-        subnet=$(carburator get json floating_ip.value.ipv6.ip_network -p "$fip_out")
-        v6_block_uuid=$(carburator register net-block "$ipv6" \
+        block_v6=$(carburator get json floating_ip.value.ipv6.ip_network \
+            string -p "$fip_out")
+
+        v6_block_uuid=$(carburator register net-block "$block_v6" \
             --extract \
-            --ip "$ipv6" \
+            --ip "$fip6" \
             --uuid \
             --floating \
             --provider hetzner \
-            --provisioner terraform \
-            --cidr "$subnet") || exit 120
+            --provisioner terraform) || exit 120
 
         # Point address to node.
         v6_node_uuid=$(carburator get json floating_ip.value.ipv6.labels.primary \
-            -p "$fip_out")
+            string -p "$fip_out")
 
         carburator node address \
             --node-uuid "$v6_node_uuid" \
