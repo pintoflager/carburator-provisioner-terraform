@@ -33,7 +33,7 @@ export TF_VAR_project_id="$PROJECT_IDENTIFIER"
 export TF_DATA_DIR="$PROVISIONER_PATH/.terraform"
 export TF_PLUGIN_CACHE_DIR="$PROVISIONER_PATH/.terraform"
 
-nodes=$(carburator get json nodes array-raw -p '.exec.json')
+nodes=$(carburator get json nodes array-raw -p .exec.json)
 export TF_VAR_nodes="$nodes"
 
 provisioner_call() {

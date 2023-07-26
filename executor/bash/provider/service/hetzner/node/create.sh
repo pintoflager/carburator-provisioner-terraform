@@ -50,7 +50,7 @@ export TF_DATA_DIR="$PROVISIONER_PATH/.terraform"
 export TF_PLUGIN_CACHE_DIR="$PROVISIONER_PATH/.terraform"
 
 # Set nodes array as servers config source.
-nodes=$(carburator get json nodes array-raw -p '.exec.json')
+nodes=$(carburator get json nodes array-raw -p .exec.json)
 
 if [[ -z $nodes ]]; then
 	carburator print terminal error "Could not load nodes array from .exec.json"

@@ -41,7 +41,7 @@ export TF_VAR_net_range="10.10"
 export TF_VAR_net_type="cloud"
 
 # Nodes as they're seen from the project
-nodes=$(carburator get json nodes array-raw -p '.exec.json')
+nodes=$(carburator get json nodes array-raw -p .exec.json)
 
 export TF_VAR_net_nodes="$nodes"
 
