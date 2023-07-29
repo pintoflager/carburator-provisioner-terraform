@@ -22,8 +22,9 @@ done < <(find "$terraform_sourcedir" -maxdepth 1 -iname '*.tf')
 ###
 # Get API token from secrets or bail out early.
 #
-token=$(carburator get secret "$PROVISIONER_SERVICE_PROVIDER_SECRETS_0" --user root)
-exitcode=$?
+user=${PROVISIONER_SERVICE_PROVIDER_PACKAGE_USER_PUBLIC_IDENTIFIER:-root}
+token=$(carburator get secret "$PROVISIONER_SERVICE_PROVIDER_SECRETS_0" \
+	--user "$user"); exitcode=$?
 
 if [[ -z $token || $exitcode -gt 0 ]]; then
 	carburator print terminal error \
