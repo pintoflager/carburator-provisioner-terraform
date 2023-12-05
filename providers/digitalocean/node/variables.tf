@@ -19,9 +19,7 @@ variable "nodes" {
     object({
       cluster = string
       hostname = string
-      ownership = object({
-        ref = string
-      })
+      uuid = string
       os = object({
         name = string
       })

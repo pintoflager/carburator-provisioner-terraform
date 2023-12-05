@@ -12,7 +12,7 @@ locals {
       "eu-central"
   }
   nodes_in_clusters = {for n in var.net_nodes:
-    n.ownership.ref => n.cluster
+    n.uuid => n.cluster
   }
   provisioned_nodes = {for v in var.nodes_output:
     v.labels.uuid => v.id

@@ -21,9 +21,7 @@ variable "net_nodes" {
       location = object({
         name = string
       })
-      ownership = object({
-        ref = string
-      })
+      uuid = string
     })  
   )
 }

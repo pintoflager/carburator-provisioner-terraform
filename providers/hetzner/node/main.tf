@@ -45,7 +45,7 @@ resource "hcloud_server" "servers" {
   ssh_keys = [var.ssh_id]
   placement_group_id = hcloud_placement_group.server_placement[each.value.cluster].id
   labels = {
-    "uuid" : each.value.ownership.ref
+    "uuid" : each.value.uuid
     "cluster": each.value.cluster
   }
 }

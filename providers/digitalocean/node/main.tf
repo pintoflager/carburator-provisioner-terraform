@@ -16,7 +16,7 @@ provider "digitalocean" {
 
 resource "digitalocean_tag" "uuid" {
   for_each    = local.nodes
-  name        = each.value.ownership.ref
+  name        = each.value.uuid
 }
 
 resource "digitalocean_tag" "cluster" {
@@ -36,7 +36,7 @@ resource "digitalocean_droplet" "servers" {
   ipv6        = each.value.toggles.ipv6
   ssh_keys    = [var.ssh_id]
   tags        = [
-    digitalocean_tag.uuid[each.value.ownership.ref].id,
+    digitalocean_tag.uuid[each.value.uuid].id,
     digitalocean_tag.cluster[each.value.cluster].id
   ]
 }
