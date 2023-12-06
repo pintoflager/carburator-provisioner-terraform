@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-carburator print terminal info "Invoking Hetzner's Terraform network provisioner..."
+carburator log info "Invoking Hetzner's Terraform network provisioner..."
 
 resource="network"
 resource_dir="$INVOCATION_PATH/terraform"
@@ -27,7 +27,7 @@ token=$(carburator get secret "$PROVISIONER_SERVICE_PROVIDER_SECRETS_0" \
 	--user "$user"); exitcode=$?
 
 if [[ -z $token || $exitcode -gt 0 ]]; then
-	carburator print terminal error \
+	carburator log error \
 		"Could not load Hetzner API token from secret. Unable to proceed"
 	exit 120
 fi
@@ -60,7 +60,7 @@ provisioner_call() {
 
 	# Assuming create failed as we cant load the output
 	if ! carburator has json network.value --path "$2"; then
-		carburator print terminal error "Create networks failed."
+		carburator log error "Create networks failed."
 		rm -f "$2"; return 110
 	fi
 }
@@ -68,7 +68,7 @@ provisioner_call() {
 provisioner_call "$resource_dir" "$network_out"; exitcode=$?
 
 if [[ $exitcode -eq 0 ]]; then
-	carburator print terminal success \
+	carburator log success \
 		"Private network created successfully with Terraform."
 else
 	exit 110
@@ -86,7 +86,7 @@ for (( a=0; a<net_len; a++ )); do
 	block=$(carburator get json "network.value.$a.ip_range" string -p "$network_out")
 
 	if [[ -z $block ]]; then
-		carburator print terminal error "Unable to read network range from '$network_out'"
+		carburator log error "Unable to read network range from '$network_out'"
 		exit 120
 	fi
 
@@ -96,7 +96,7 @@ for (( a=0; a<net_len; a++ )); do
 		net_node_id=$(carburator get json "node.value.$i.server_id" number -p "$network_out")
 
 		if [[ -z $net_node_id ]]; then
-			carburator print terminal error "Unable to read node ID from '$network_out'"
+			carburator log error "Unable to read node ID from '$network_out'"
 			exit 120
 		fi
 		
@@ -104,7 +104,7 @@ for (( a=0; a<net_len; a++ )); do
 		ip=$(carburator get json "node.value.$i.ip" string -p "$network_out")
 
 		if [[ -z $ip || $ip == null ]]; then
-			carburator print terminal error "Unable to find IP for node with ID '$net_node_id'"
+			carburator log error "Unable to find IP for node with ID '$net_node_id'"
 			exit 120
 		fi
 
@@ -128,7 +128,7 @@ for (( a=0; a<net_len; a++ )); do
 				--uuid); exitcode=$?
 
 			if [[ $exitcode -gt 0 ]]; then
-				carburator print terminal error \
+				carburator log error \
 					"Unable to register network block '$block' and extract IP '$ip'"
 				exit 120
 			fi
@@ -143,7 +143,7 @@ for (( a=0; a<net_len; a++ )); do
 		done
 
 		# We should be able to find all nodes, if not, well, shit.
-		carburator print terminal error "Unable to find node matching ID '$net_node_id'"
+		carburator log error "Unable to find node matching ID '$net_node_id'"
 		exit 120
 	done
 done

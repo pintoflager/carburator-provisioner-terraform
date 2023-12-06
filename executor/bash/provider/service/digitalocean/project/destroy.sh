@@ -10,7 +10,7 @@ output="$INVOCATION_PATH/$resource.json"
 token=$(carburator get secret "$PROVISIONER_SERVICE_PROVIDER_SECRETS_0" --user root); exitcode=$?
 
 if [[ -z $token || $exitcode -gt 0 ]]; then
-	carburator print terminal error \
+	carburator log error \
 		"Could not load Digital Ocean API token from secret. Unable to proceed"
 	exit 120
 fi
@@ -29,12 +29,12 @@ provisioner_call() {
 }
 
 if provisioner_call "$resource_dir"; then
-	carburator print terminal success "Terraform provisioner terminated successfully"
+	carburator log success "Terraform provisioner terminated successfully"
 
 	rm -rf "$resource_dir"
 	rm -f "$output"
 
-	carburator print terminal success "Project destroyed from service provider Digital Ocean"
+	carburator log success "Project destroyed from service provider Digital Ocean"
 else
 	exit 110
 fi

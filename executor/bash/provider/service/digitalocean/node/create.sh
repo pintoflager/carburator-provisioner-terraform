@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-carburator print terminal info "Invoking Digital Ocean's Terraform server provisioner..."
+carburator log info "Invoking Digital Ocean's Terraform server provisioner..."
 
 resource="node"
 resource_dir="$INVOCATION_PATH/terraform"
@@ -30,7 +30,7 @@ token=$(carburator get secret "$PROVISIONER_SERVICE_PROVIDER_SECRETS_0" \
 	--user "$user"); exitcode=$?
 
 if [[ -z $token || $exitcode -gt 0 ]]; then
-	carburator print terminal error \
+	carburator log error \
 		"Could not load Digital Ocean API token from secret. Unable to proceed"
 	exit 120
 fi
@@ -39,7 +39,7 @@ sshkey_id=$(carburator get json project.value.sshkey_id string \
 	-p "$project_out"); exitcode=$?
 
 if [[ -z $sshkey_id || $exitcode -gt 0 ]]; then
-	carburator print terminal error \
+	carburator log error \
 		"Could not load $PROVIDER_NAME sshkey id. Unable to proceed."
 	exit 120
 fi
@@ -54,7 +54,7 @@ export TF_PLUGIN_CACHE_DIR="$PROVISIONER_PATH/.terraform"
 nodes=$(carburator get json nodes array-raw -p .exec.json)
 
 if [[ -z $nodes ]]; then
-	carburator print terminal error "Could not load nodes array from .exec.json"
+	carburator log error "Could not load nodes array from .exec.json"
 	exit 120
 fi
 
@@ -68,7 +68,7 @@ provisioner_call() {
 
 	# Assuming create failed as we cant load the output
 	if ! carburator has json node.value -p "$2"; then
-		carburator print terminal error "Create nodes failed."
+		carburator log error "Create nodes failed."
 		return 110
 	fi
 }
@@ -76,7 +76,7 @@ provisioner_call() {
 provisioner_call "$resource_dir" "$node_out"; exitcode=$?
 
 if [[ $exitcode -eq 0 ]]; then
-	carburator print terminal success \
+	carburator log success \
 		"Server nodes created successfully with Terraform."
 
 	len=$(carburator get json node.value array -p "$node_out" | wc -l)
@@ -85,7 +85,7 @@ if [[ $exitcode -eq 0 ]]; then
 		node_uuid=$(carburator get json "node.value.$i.labels.uuid" string -p "$node_out")
 
 		name=$(carburator get json "node.value.$i.name" string -p "$node_out")
-		carburator print terminal info "Locking node '$name' provisioner to Terraform..."
+		carburator log info "Locking node '$name' provisioner to Terraform..."
 		carburator node lock-provisioner 'terraform' --node-uuid "$node_uuid"
 
 		# With Digital Ocean we know ipv4 comes without cidr. That's pretty obvious as these
@@ -98,7 +98,7 @@ if [[ $exitcode -eq 0 ]]; then
 
 		# Register block and extract first (and the only) ip from it.
 		if [[ -n $ipv4 && $ipv4 != null ]]; then
-			carburator print terminal info \
+			carburator log info \
 				"Extracting IPv4 address blocks from node '$name' IP..."
 
 			address_block_uuid=$(carburator register net-block "$ipv4" \
@@ -121,7 +121,7 @@ if [[ $exitcode -eq 0 ]]; then
 		
 		# Register block and the IP that Digital Ocean has set up for the node.
 		if [[ -n $ipv6_block && $ipv6_block != null ]]; then
-			carburator print terminal info \
+			carburator log info \
 				"Extracting IPv6 address blocks from node '$name' IP..."
 
 			ipv6=$(carburator get json "node.value.$i.ipv6" string -p "$node_out")
@@ -142,13 +142,13 @@ if [[ $exitcode -eq 0 ]]; then
 		fi
 	done
 
-	carburator print terminal success "IP address blocks registered."
+	carburator log success "IP address blocks registered."
 elif [[ $exitcode -eq 110 ]]; then
-	carburator print terminal error \
+	carburator log error \
 		"Terraform provisioner failed with exitcode $exitcode, allow retry..."
 	exit 110
 else
-	carburator print terminal error \
+	carburator log error \
 		"Terraform provisioner failed with exitcode $exitcode"
 	exit 120
 fi

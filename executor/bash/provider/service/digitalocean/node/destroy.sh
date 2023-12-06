@@ -13,7 +13,7 @@ mkdir -p "$resource_dir"
 token=$(carburator get secret "$PROVISIONER_SERVICE_PROVIDER_SECRETS_0" --user root); exitcode=$?
 
 if [[ -z $token || $exitcode -gt 0 ]]; then
-	carburator print terminal error \
+	carburator log error \
 		"Could not load Digital Ocean API token from secret. Unable to proceed"
 	exit 120
 fi
@@ -22,7 +22,7 @@ sshkey_id=$(carburator get env "${PROVIDER_NAME}_ROOT_SSHKEY_ID" \
 	--provisioner terraform); exitcode=$?
 
 if [[ -z $sshkey_id || $exitcode -gt 0 ]]; then
-	carburator print terminal error \
+	carburator log error \
 		"Could not load $PROVIDER_NAME sshkey id from terraform/.env. Unable to proceed"
 	exit 120
 fi

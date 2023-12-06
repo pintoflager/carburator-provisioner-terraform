@@ -2,25 +2,25 @@
 
 # ATTENTION: Supports only client nodes, pointless to read role from $1
 if [[ $1 == "server" ]]; then
-    carburator print terminal error \
+    carburator log error \
         "Provisioners register only on client nodes. Package configuration error."
     exit 120
 fi
 
 if ! carburator has program wget; then
-    carburator print terminal error \
+    carburator log error \
         "Host machine is missing 'wget' program. Install it before trying again."
     exit 120
 fi
 
 if ! carburator has program unzip; then
-    carburator print terminal error \
+    carburator log error \
         "Host machine is missing 'unzip' program. Install it before trying again."
     exit 120
 fi
 
 if ! carburator has program terraform; then
-    carburator print terminal warn "Missing terraform on client machine."
+    carburator log warn "Missing terraform on client machine."
 
     carburator prompt yes-no \
         "Should we try to install terraform?" \
@@ -31,12 +31,12 @@ if ! carburator has program terraform; then
         exit 120
     fi
 else
-    carburator print terminal success "Terraform found from the client"
+    carburator log success "Terraform found from the client"
     exit 0
 fi
 
 # TODO: Untested below.
-carburator print terminal warn \
+carburator log warn \
   "Missing required program Terraform. Trying to install it before proceeding..."
 
 # Try to download and install terraform binary
@@ -50,7 +50,7 @@ elif [ "$arch" = "armv7" ]; then
 elif [ "$arch" = "aarch64" ]; then
     arch="arm64"
 else
-    carburator print terminal error "Host has unsupported chip architecture: $arch"
+    carburator log error "Host has unsupported chip architecture: $arch"
     exit 120
 fi
 

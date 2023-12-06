@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-carburator print terminal info "Invoking Terraform github repository provisioner..."
+carburator log info "Invoking Terraform github repository provisioner..."
 
 ###
 # Creates repository to the managed github account.
@@ -25,7 +25,7 @@ done < <(find "$PROVISIONER_GIT_PROVIDER_PATH/$resource" -maxdepth 1 -iname '*.t
 token=$(carburator get secret "$PROVISIONER_GIT_PROVIDER_SECRETS_0" --user root); exitcode=$?
 
 if [[ -z $token || $exitcode -gt 0 ]]; then
-	carburator print terminal error \
+	carburator log error \
 		"Could not load Github API token from secret. Unable to proceed"
 	exit 120
 fi
@@ -70,5 +70,5 @@ if provisioner_call "$resource_dir" "$output"; then
 		-p "$output") || exit 120
 	carburator put toml url_ssh "$ssh_clone" -p "$repo_toml"
 
-	carburator print terminal success "Terraform provisioner terminated successfully"
+	carburator log success "Terraform provisioner terminated successfully"
 fi

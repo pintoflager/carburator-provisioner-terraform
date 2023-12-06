@@ -11,7 +11,7 @@ token=$(carburator get secret "$PROVISIONER_GIT_PROVIDER_SECRETS_0" --user root)
 exitcode=$?
 
 if [[ -z $token || $exitcode -gt 0 ]]; then
-	carburator print terminal error \
+	carburator log error \
 		"Could not load Hetzner API token from secret. Unable to proceed"
 	exit 120
 fi
@@ -29,12 +29,12 @@ provisioner_call() {
 }
 
 if provisioner_call "$resource_dir"; then
-	carburator print terminal success "Terraform provisioner terminated successfully"
+	carburator log success "Terraform provisioner terminated successfully"
 
 	rm -rf "$resource_dir"
 	rm -f "$output"
 
-	carburator print terminal success "Repository destroyed from git provider Github"
+	carburator log success "Repository destroyed from git provider Github"
 else
 	exit 110
 fi

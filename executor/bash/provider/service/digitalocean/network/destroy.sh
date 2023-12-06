@@ -10,7 +10,7 @@ output="$INVOCATION_PATH/$resource.json"
 token=$(carburator get secret "$PROVISIONER_SERVICE_PROVIDER_SECRETS_0" --user root); exitcode=$?
 
 if [[ -z $token || $exitcode -gt 0 ]]; then
-	carburator print terminal error \
+	carburator log error \
 		"Could not load Digital Ocean API token from secret. Unable to proceed"
 	exit 120
 fi
@@ -36,7 +36,7 @@ if [[ -e "$INVOCATION_PATH/$resource/.eu.nodes.json" ]]; then
 	export TF_VAR_networks="$network_json"
 
 	if provisioner_call "$resource_dir"; then
-		carburator print terminal success "Europe central networks destroyed."	
+		carburator log success "Europe central networks destroyed."	
 	else
 		exit 110
 	fi
@@ -47,7 +47,7 @@ if [[ -e "$INVOCATION_PATH/$resource/.us.east.nodes.json" ]]; then
 	export TF_VAR_networks="$network_json"
 
 	if provisioner_call "$resource_dir"; then
-		carburator print terminal success "USA east networks destroyed."
+		carburator log success "USA east networks destroyed."
 	else
 		exit 110
 	fi
@@ -58,7 +58,7 @@ if [[ -e "$INVOCATION_PATH/$resource/.us.west.nodes.json" ]]; then
 	export TF_VAR_networks="$network_json"
 
 	if provisioner_call "$resource_dir"; then
-		carburator print terminal success "USA west networks destroyed."	
+		carburator log success "USA west networks destroyed."	
 	else
 		exit 110
 	fi

@@ -21,9 +21,7 @@ variable "nodes" {
   type = list(
     object({
       hostname = string
-      ownership = object({
-        ref = string
-      })
+      uuid = string
       toggles = object({
         ipv4 = bool
         ipv6 = bool

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-carburator print terminal info "Invoking Terraform project provisioner..."
+carburator log info "Invoking Terraform project provisioner..."
 
 ###
 # Registers project with digitalocean and adds ssh key for project root.
@@ -31,7 +31,7 @@ token=$(carburator get secret "$PROVISIONER_SERVICE_PROVIDER_SECRETS_0" \
 	--user "$user"); exitcode=$?
 
 if [[ -z $token || $exitcode -gt 0 ]]; then
-	carburator print terminal error \
+	carburator log error \
 		"Could not load Digital Ocean API token from secret. Unable to proceed"
 	exit 120
 fi
@@ -62,13 +62,13 @@ provisioner_call() {
 provisioner_call "$resource_dir" "$project_out"; exitcode=$?
 
 if [[ $exitcode -eq 0 ]]; then
-	carburator print terminal success "Terraform provisioner terminated successfully"
+	carburator log success "Terraform provisioner terminated successfully"
 elif [[ $exitcode -eq 110 ]]; then
-	carburator print terminal error \
+	carburator log error \
 		"Terraform provisioner failed with exitcode $exitcode, allow retry..."
 	exit 110
 else
-	carburator print terminal error \
+	carburator log error \
 		"Terraform provisioner failed with exitcode $exitcode"
 	exit 120
 fi
