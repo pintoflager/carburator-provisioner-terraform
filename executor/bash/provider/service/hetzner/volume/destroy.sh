@@ -1,35 +1,87 @@
 #!/usr/bin/env bash
 
-# TODO: environment.
+carburator log info "Invoking Hetzner's Terraform server provisioner..."
 
-# local app="$1" lscope="$2" tf_context volumes names rundir;
-# rundir=$(project-rundir)
-# tf_context="$PWD/$app/.tf-volume";
+tag=$(carburator get env VOLUME_NAME -p .exec.env)
+size=$(carburator get env VOLUME_SIZE -p .exec.env)
+filesystem=$(carburator get env VOLUME_FILESYSTEM -p .exec.env)
 
-# # Don't bother without resources.
-# if [[ ! -e "$PWD/$app/volume.json" ]]; then
-# 	echo-error "Fail. volume.json was not found." && return 1
-# fi
+if [[ -z $tag ]]; then
+    carburator log error "Volume name missing from exec.env"
+    exit 120
+fi
 
-# # Scope of destruction can be defined with an argument
-# if [[ -z $lscope ]]; then
-# 	volumes=$(jq -rc ".volumes.value" "$PWD/$app/volume.json")
-# else
-# 	names=$(arr-to-jsonarr "${lscope//, / }")
-# 	volumes=$(jq -rc \
-# 	  ".volumes.value[] | select([.name] | inside($names))" \
-# 	  "$PWD/$app/volume.json")
-# 	fi
+resource="volume"
+resource_dir="$INVOCATION_PATH/terraform_$tag"
+data_dir="$PROVISIONER_PATH/providers/hetzner"
+terraform_sourcedir="$data_dir/$resource"
 
-# 	export TF_VAR_hcloud_token="$cloud_token"
-# 	export TF_VAR_volumes="$volumes"
-# 	export TF_DATA_DIR="$rundir/.terraform"
-# 	export TF_PLUGIN_CACHE_DIR="$rundir/.terraform"
+# Resource data paths
+node_out="$data_dir/node.json"
 
-# 	if [[ -e $tf_context ]]; then
-# 	terraform -chdir="$tf_context" init
-# 	terraform -chdir="$tf_context" destroy -auto-approve
+# Make sure terraform resource dir exist.
+mkdir -p "$resource_dir"
 
-# 	echo-success "Service provider volume for $app destroyed"
-# fi
+# Copy terraform files from package to execution dir.
+# This way files can be modified and package update won't overwrite
+# the changes.
+while read -r tf_file; do
+	file=$(basename "$tf_file")
+	cp -n "$tf_file" "$resource_dir/$file"
+done < <(find "$terraform_sourcedir" -maxdepth 1 -iname '*.tf')
 
+###
+# Get API token from secrets or bail early.
+#
+user=${PROVISIONER_SERVICE_PROVIDER_PACKAGE_USER_PUBLIC_IDENTIFIER:-root}
+token=$(carburator get secret "$PROVISIONER_SERVICE_PROVIDER_SECRETS_0" \
+	--user "$user"); exitcode=$?
+
+if [[ -z $token || $exitcode -gt 0 ]]; then
+	carburator log error \
+		"Could not load Hetzner API token from secret. Unable to proceed"
+	exit 120
+fi
+
+export TF_VAR_hcloud_token="$token"
+export TF_VAR_volume_name="$tag"
+export TF_VAR_volume_size="$size"
+export TF_VAR_volume_filesystem="$filesystem"
+export TF_DATA_DIR="$PROVISIONER_PATH/.terraform"
+export TF_PLUGIN_CACHE_DIR="$PROVISIONER_PATH/.terraform"
+
+nodes=$(carburator get json nodes array-raw -p .exec.json)
+
+if [[ -z $nodes ]]; then
+	carburator log error "Could not load nodes array from .exec.json"
+	exit 120
+fi
+
+export TF_VAR_nodes="$nodes"
+
+# Nodes as they're output from terraform.
+# 
+# We only connect nodes provisioned with terraform.
+nodes_output=$(carburator get json node.value array-raw -p "$node_out")
+
+export TF_VAR_nodes_output="$nodes_output"
+
+provisioner_call() {
+	terraform -chdir="$1" init
+	terraform -chdir="$1" destroy -auto-approve
+}
+
+provisioner_call "$resource_dir"; exitcode=$?
+
+if [[ $exitcode -eq 0 ]]; then
+	carburator log success \
+		"Node volume(s) destroyed successfully with Terraform."
+elif [[ $exitcode -eq 110 ]]; then
+	carburator log error \
+		"Terraform provisioner failed with exitcode $exitcode, allow retry..."
+	exit 110
+else
+	carburator log error \
+		"Terraform failed to destroy volumes. Exitcode $exitcode"
+	exit 120
+fi

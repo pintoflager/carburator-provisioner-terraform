@@ -2,7 +2,7 @@ terraform {
   required_providers {
     hcloud = {
       source  = "hetznercloud/hcloud"
-      version = "1.34.1"
+      version = "1.38.2"
     }
     template = {
       version = "~> 2.2.0"
@@ -24,9 +24,10 @@ provider "hcloud" {
 # Volumes.
 #
 resource "hcloud_volume" "volumes" {
-  count      = length(var.volumes)
-  name       = "${var.volumes[count.index].name}"
-  server_id  = var.volumes[count.index].server_id
-  size       = var.volumes[count.index].size
-  format     = var.volumes[count.index].format
+  for_each   = local.volumes
+  name       = each.key
+  size       = var.volume_size
+  server_id  = local.provisioned_nodes[each.value]
+  automount  = true
+  format     = var.volume_filesystem
 }
