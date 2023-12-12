@@ -94,26 +94,25 @@ for (( a=0; a<vol_len; a++ )); do
     vol_size=$(carburator get json "volumes.value.$a.size" number -p "$vol_out")
     vol_fs=$(carburator get json "volumes.value.$a.filesystem" string -p "$vol_out")
     vol_device=$(carburator get json "volumes.value.$a.device" string -p "$vol_out")
-    vol_identifier=$(carburator get json "volumes.value.$a.labels.identifier" string \
+    vol_id=$(carburator get json "volumes.value.$a.labels.identifier" string \
         -p "$vol_out")
 
-    node_uuid=$(carburator get json "volumes.value.$a.labels.uuid" string \
-        -p "$vol_out")
+    node=$(carburator get json "volumes.value.$a.labels.node" string -p "$vol_out")
 
     # Binary expects volume sizes in bytes
     size=$(carburator fn bytes "$vol_size" gb)
 
     carburator node volume \
-        "$vol_identifier" \
+        "$vol_id" \
         "/mnt/HC_Volume_${vol_id}" \
         --size "$size" \
         --filesystem "$vol_fs" \
         --device "$vol_device" \
-        --node-uuid "$node_uuid"; exitcode=$?
+        --node-uuid "$node"; exitcode=$?
 
     if [[ $exitcode -gt 0 ]]; then
         carburator log error \
-            "Unable to register volume $vol_identifier on node $node_uuid"
+            "Unable to register volume $vol_id on node $node"
         exit 120
     fi
 done

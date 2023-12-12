@@ -27,12 +27,12 @@ resource "hcloud_volume" "volumes" {
   for_each   = local.vol_nodes
   name       = each.key
   size       = each.value.size
-  server_id  = local.provisioned_nodes[each.value.uuid].id
+  server_id  = local.provisioned_nodes[each.value.node].id
   automount  = true
   format     = each.value.fs
   labels = {
     "identifier": each.value.identifier
-    "node" : each.value.uuid
-    "cluster": local.provisioned_nodes[each.value.uuid].cluster
+    "node" : each.value.node
+    "cluster": local.provisioned_nodes[each.value.node].cluster
   }
 }
