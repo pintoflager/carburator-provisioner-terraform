@@ -9,6 +9,7 @@ output "volumes" {
       name           = v.name
       id             = v.id
       size           = v.size
+      filesystem     = v.format
       location       = v.location
       server_id      = v.server_id
       device         = v.linux_device

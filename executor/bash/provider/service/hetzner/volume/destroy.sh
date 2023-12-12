@@ -2,17 +2,8 @@
 
 carburator log info "Invoking Hetzner's Terraform server provisioner..."
 
-tag=$(carburator get env VOLUME_NAME -p .exec.env)
-size=$(carburator get env VOLUME_SIZE -p .exec.env)
-filesystem=$(carburator get env VOLUME_FILESYSTEM -p .exec.env)
-
-if [[ -z $tag ]]; then
-    carburator log error "Volume name missing from exec.env"
-    exit 120
-fi
-
 resource="volume"
-resource_dir="$INVOCATION_PATH/terraform_$tag"
+resource_dir="$INVOCATION_PATH/terraform"
 data_dir="$PROVISIONER_PATH/providers/hetzner"
 terraform_sourcedir="$data_dir/$resource"
 
@@ -44,24 +35,21 @@ if [[ -z $token || $exitcode -gt 0 ]]; then
 fi
 
 export TF_VAR_hcloud_token="$token"
-export TF_VAR_volume_name="$tag"
-export TF_VAR_volume_size="$size"
-export TF_VAR_volume_filesystem="$filesystem"
 export TF_DATA_DIR="$PROVISIONER_PATH/.terraform"
 export TF_PLUGIN_CACHE_DIR="$PROVISIONER_PATH/.terraform"
 
-nodes=$(carburator get json nodes array-raw -p .exec.json)
+volumes=$(carburator get json volumes array-raw -p .exec.json)
 
-if [[ -z $nodes ]]; then
-	carburator log error "Could not load nodes array from .exec.json"
+if [[ -z $volumes ]]; then
+	carburator log error "Could not load volumes array from .exec.json"
 	exit 120
 fi
 
-export TF_VAR_nodes="$nodes"
+export TF_VAR_volumes="$volumes"
 
 # Nodes as they're output from terraform.
 # 
-# We only connect nodes provisioned with terraform.
+# We only connect volumes provisioned with terraform.
 nodes_output=$(carburator get json node.value array-raw -p "$node_out")
 
 export TF_VAR_nodes_output="$nodes_output"

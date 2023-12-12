@@ -2,23 +2,14 @@
 
 carburator log info "Invoking Hetzner's Terraform server provisioner..."
 
-tag=$(carburator get env VOLUME_NAME -p .exec.env)
-size=$(carburator get env VOLUME_SIZE -p .exec.env)
-filesystem=$(carburator get env VOLUME_FILESYSTEM -p .exec.env)
-
-if [[ -z $tag ]]; then
-    carburator log error "Volume name missing from exec.env"
-    exit 120
-fi
-
 resource="volume"
-resource_dir="$INVOCATION_PATH/terraform_$tag"
+resource_dir="$INVOCATION_PATH/terraform"
 data_dir="$PROVISIONER_PATH/providers/hetzner"
 terraform_sourcedir="$data_dir/$resource"
 
 # Resource data paths
 node_out="$data_dir/node.json"
-vol_out="$data_dir/${resource}_$tag.json"
+vol_out="$data_dir/$resource.json"
 
 # Make sure terraform resource dir exist.
 mkdir -p "$resource_dir"
@@ -44,21 +35,28 @@ if [[ -z $token || $exitcode -gt 0 ]]; then
 	exit 120
 fi
 
+size=$(carburator get env VOLUME_DEFAULT_SIZE -p .exec.env)
+if [[ -n $size ]]; then
+    export TF_VAR_volume_default_size="$size"
+fi
+
+filesystem=$(carburator get env VOLUME_DEFAULT_FILESYSTEM -p .exec.env)
+if [[ -n $filesystem ]]; then
+    export TF_VAR_volume_default_filesystem="$filesystem"
+fi
+
 export TF_VAR_hcloud_token="$token"
-export TF_VAR_volume_name="$tag"
-export TF_VAR_volume_size="$size"
-export TF_VAR_volume_filesystem="$filesystem"
 export TF_DATA_DIR="$PROVISIONER_PATH/.terraform"
 export TF_PLUGIN_CACHE_DIR="$PROVISIONER_PATH/.terraform"
 
-nodes=$(carburator get json nodes array-raw -p .exec.json)
+volumes=$(carburator get json volumes array-raw -p .exec.json)
 
-if [[ -z $nodes ]]; then
-	carburator log error "Could not load nodes array from .exec.json"
+if [[ -z $volumes ]]; then
+	carburator log error "Could not load volumes array from .exec.json"
 	exit 120
 fi
 
-export TF_VAR_nodes="$nodes"
+export TF_VAR_volumes="$volumes"
 
 # Nodes as they're output from terraform.
 # 
@@ -71,12 +69,6 @@ provisioner_call() {
 	terraform -chdir="$1" init
 	terraform -chdir="$1" apply -auto-approve
 	terraform -chdir="$1" output -json > "$2"
-
-	# Assuming create failed as we cant load the output
-	if ! carburator has json volume.value -p "$2"; then
-		carburator log error "Create volume failed."
-		return 110
-	fi
 }
 
 provisioner_call "$resource_dir" "$vol_out"; exitcode=$?
@@ -94,43 +86,34 @@ else
 	exit 120
 fi
 
-# Loop all created volumes and register node trails.
+# Loop all created volumes and update node volume paths.
 vol_len=$(carburator get json volumes.value array --path "$vol_out" | wc -l)
-node_len=$(carburator get json node.value array --path "$node_out" | wc -l)
 
 for (( a=0; a<vol_len; a++ )); do
-    server_id=$(carburator get json "volumes.value.$a.server_id" string -p "$vol_out")
     vol_id=$(carburator get json "volumes.value.$a.id" string -p "$vol_out")
-    vol_trail="/mnt/HC_Volume_${vol_id}"
-	
-    # Loop all nodes from node.json, compare server_id's and add trail
-    for (( g=0; g<node_len; g++ )); do
-        node_id=$(carburator get json "node.value.$g.id" string -p "$node_out")
+    vol_size=$(carburator get json "volumes.value.$a.size" number -p "$vol_out")
+    vol_fs=$(carburator get json "volumes.value.$a.filesystem" string -p "$vol_out")
+    vol_device=$(carburator get json "volumes.value.$a.device" string -p "$vol_out")
+    vol_identifier=$(carburator get json "volumes.value.$a.labels.identifier" string \
+        -p "$vol_out")
 
-        # Not what we're looking for, next round please.
-        if [[ $node_id != "$server_id" ]]; then continue; fi
+    node_uuid=$(carburator get json "volumes.value.$a.labels.uuid" string \
+        -p "$vol_out")
 
-        # Easiest way to locate the right node is with it's UUID
-        node_uuid=$(carburator get json "node.value.$g.labels.uuid" string \
-            -p "$node_out")
+    # Binary expects volume sizes in bytes
+    size=$(carburator fn bytes "$vol_size" gb)
 
-        carburator node trail \
-            "$tag" \
-            "$vol_trail"\
-            --node-uuid "$node_uuid"; exitcode=$?
+    carburator node volume \
+        "$vol_identifier" \
+        "/mnt/HC_Volume_${vol_id}" \
+        --size "$size" \
+        --filesystem "$vol_fs" \
+        --device "$vol_device" \
+        --node-uuid "$node_uuid"; exitcode=$?
 
-        if [[ $exitcode -gt 0 ]]; then
-            carburator log error \
-                "Unable to register trail to volume $vol_id on node $node_id"
-            exit 120
-        fi
-
-        # Next volume
-        continue 2;
-    done
-
-    # We should be able to find all nodes, if not, well, shit.
-    carburator log error \
-        "Unable to find node matching server_id $server_id from volume"
-    exit 120
+    if [[ $exitcode -gt 0 ]]; then
+        carburator log error \
+            "Unable to register volume $vol_identifier on node $node_uuid"
+        exit 120
+    fi
 done

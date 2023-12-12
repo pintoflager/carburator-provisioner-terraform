@@ -5,27 +5,24 @@ variable "hcloud_token" {
   sensitive = true
 }
 
-variable "volume_name" {
-  type = string
-}
-
-variable "volume_size" {
+variable "volume_default_size" {
   type = number
+  default = 10
 }
 
-variable "volume_filesystem" {
+variable "volume_default_filesystem" {
   type = string
+  default = "ext4"
 }
 
-variable "nodes" {
+variable "volumes" {
   type = list(
     object({
-      hostname = string
-      uuid = string
-      toggles = object({
-        proxy = bool
-      })
-    })  
+      identifier = string
+      node_uuid = string
+      size = optional(number),
+      filesystem = optional(string)
+    })
   )
 }
 
@@ -37,27 +34,8 @@ variable "nodes_output" {
       id       = string
       labels   = object({
         uuid     = string
+        cluster  = string
       })
     })
   )
 }
-
-
-# Has to be added as TF_VAR before running init / apply
-# This can take volume.json as variable value.
-# variable "volumes" {
-#   type = list(object({
-#     name        = string
-#     server_id   = number
-#     size        = number
-#     format      = string
-#   }))
-#   default = [
-#     {
-#       name       = ""
-#       server_id  = 0
-#       size       = 10
-#       format     = "ext4"
-#     }
-#   ]
-# }

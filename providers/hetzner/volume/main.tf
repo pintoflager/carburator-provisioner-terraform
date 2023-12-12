@@ -24,10 +24,15 @@ provider "hcloud" {
 # Volumes.
 #
 resource "hcloud_volume" "volumes" {
-  for_each   = local.volumes
+  for_each   = local.vol_nodes
   name       = each.key
-  size       = var.volume_size
-  server_id  = local.provisioned_nodes[each.value]
+  size       = each.value.size
+  server_id  = local.provisioned_nodes[each.value.uuid].id
   automount  = true
-  format     = var.volume_filesystem
+  format     = each.value.fs
+  labels = {
+    "identifier": each.value.identifier
+    "node" : each.value.uuid
+    "cluster": local.provisioned_nodes[each.value.uuid].cluster
+  }
 }
