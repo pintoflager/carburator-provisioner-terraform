@@ -108,6 +108,7 @@ for (( a=0; a<vol_len; a++ )); do
         --size "$size" \
         --filesystem "$vol_fs" \
         --device "$vol_device" \
+        --description "Hetzner server volume provisioned with terraform" \
         --node-uuid "$node"; exitcode=$?
 
     if [[ $exitcode -gt 0 ]]; then

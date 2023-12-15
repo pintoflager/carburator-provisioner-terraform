@@ -6,8 +6,9 @@ locals {
     "${v.identifier}-${i}" => {
       node = v.node_uuid
       identifier = v.identifier
-      size = v.size != null ? v.size : var.volume_default_size
       fs = v.filesystem != null ? v.filesystem : var.volume_default_filesystem
+      # REMEMBER: binary gives sizes in bytes (hetzner wants them in GB)
+      size = v.size != null ? v.size / 1024 / 1024 / 1024 : var.volume_default_size
     }
   }
   provisioned_nodes = {for v in var.nodes_output:

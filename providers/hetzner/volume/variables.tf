@@ -20,6 +20,7 @@ variable "volumes" {
     object({
       identifier = string
       node_uuid = string
+      # REMEMBER: If this is set, it's in BYTES
       size = optional(number),
       filesystem = optional(string)
     })
